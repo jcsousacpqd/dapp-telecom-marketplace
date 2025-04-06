@@ -1,0 +1,10 @@
+export const TELECOIN_ADDRESS = import.meta.env.VITE_TELECOIN_ADDRESS!;
+export const ASSETS_ADDRESS = import.meta.env.VITE_ASSETS_ADDRESS!;
+export const SERVICES_ADDRESS = import.meta.env.VITE_SERVICES_ADDRESS!;
+export const ETHEREUM_PROVIDER_URL = import.meta.env.VITE_ETHEREUM_PROVIDER_URL!;
+export const HIRE_ASSET_ADDRESS = import.meta.env.VITE_HIRE_ASSET_ADDRESS!;
+export const HIRE_SERVICE_ADDRESS = import.meta.env.VITE_HIRE_SERVICE_ADDRESS!;
+export const INDY_DID_REGISTRY = import.meta.env.VITE_INDY_DID_REGISTRY!;
+export const SCHEMA_REGISTRY = import.meta.env.VITE_SCHEMA_REGISTRY!;
+export const CREDENTIAL_DEFINITION_REGISTRY = import.meta.env.VITE_CREDENTIAL_DEFINITION_REGISTRY!;
+export const REVOCATION_REGISTRY = import.meta.env.VITE_REVOCATION_REGISTRY!;

@@ -1,0 +1,11 @@
+const schema = [
+        "did:indy2:indy_besu:8Ee9b7C78E6af874eAf211/anoncreds/v0/SCHEMA/Mkt8Ee9b7C78E6af874eAf211/8Ee9b7C78E6af874eAf211",
+        "did:indy2:indy_besu:8Ee9b7C78E6af874eAf211",
+        "Mkt8Ee9b7C78E6af874eAf211",
+        "v1",
+        ["Teste_de_Servico", "asset_provider"]
+      ];
+
+      ["did:indy2:indy_besu:8Ee9b7C78E6af874eAf211/anoncreds/v0/SCHEMA/ScoreSch233/233","did:indy2:indy_besu:8Ee9b7C78E6af874eAf211","ScoreSch233","233",["name", "role"]]
+
+      ["did:indy2:indy_besu:8Ee9b7C78E6af874eAf211/anoncreds/v0/SCHEMA/Mkt8Ee9b7C78E6af874eAf211/8Ee9b7C78E6af874eAf211", "did:indy2:indy_besu:8Ee9b7C78E6af874eAf211","Mkt8Ee9b7C78E6af874eAf211","8Ee9b7C78E6af874eAf211",["", ""]]
