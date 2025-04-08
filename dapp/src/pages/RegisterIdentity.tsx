@@ -13,9 +13,15 @@ import {
   CREDENTIAL_DEFINITION_REGISTRY
 } from '@/utils/constants';
 
-const Container = styled.div`
-  max-width: 600px;
+const Wrapper = styled.div`
+  display: flex;
+  gap: 2rem;
+  max-width: 1200px;
   margin: 2rem auto;
+`;
+
+const Container = styled.div`
+  flex: 1;
   background: white;
   padding: 2rem;
   border-radius: 12px;
@@ -79,6 +85,7 @@ const Button = styled.button`
 export default function RegisterIdentity() {
   const [form, setForm] = useState({ name: '', role: '' });
   const [status, setStatus] = useState<string | null>(null);
+  const [queryResult, setQueryResult] = useState<string | null>(null);
   const navigate = useNavigate();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -94,39 +101,46 @@ export default function RegisterIdentity() {
       const didRegistry = new ethers.Contract(INDY_DID_REGISTRY, IndyDidRegistryABI.abi, signer);
       const did = `${address.slice(2, 24)}`;
       const fullDid = `did:indy2:indy_besu:${did}`;
-      console.log(fullDid)
+
       let alreadyRegistered = false;
 
       try {
         const result = await didRegistry.resolveDid(fullDid);
         alreadyRegistered = result[1] !== ethers.ZeroAddress;
-      } catch (err) {
-        console.warn(`DID ${fullDid} não encontrado. Continuando registro.`);
+      } catch {
+        console.warn(`DID ${fullDid} não encontrado.`);
       }
 
       if (alreadyRegistered) {
-        setStatus(`⚠️ Identidade já registrada com o DID: ${fullDid} Faça login com uma carteira diferente!`);
+        setStatus(`⚠️ Identidade já registrada com o DID: ${fullDid}`);
         return;
       }
 
-      const document = [[], `did:indy2:indy_besu:${did}`, [], [["did:indy2:indy_besu:RQDxoJ2Mz3WuyqaqsjVTdN#KEY-1", "Ed25519VerificationKey2018", "did:indy2:testnet:N22WedHLJdFf4yMaDXdhJcL97", "HAFkhqbPbor781QCMfNvr6oQTTixK9U7gZmDV7pszTHp", ""]], [["did:indy2:indy_besu:RQDxoJ2Mz3WuyqaqsjVTdN#KEY-1", ["1", "1", "1", "1", "1"]]], [], [], [], [], [], []];
-
+      const document = [[], fullDid, [], [["#KEY-1", "Ed25519VerificationKey2018", "controller", "key", ""]], [["#KEY-1", ["1", "1", "1", "1", "1"]]], [], [], [], [], [], []];
       const didTx = await didRegistry.createDid(document);
       await didTx.wait();
 
       const schema = [
         `did:indy2:indy_besu:${did}/anoncreds/v0/SCHEMA/Mkt${did}/${did}`,
-        `did:indy2:indy_besu:${did}`,
+        fullDid,
         `Mkt${did}`,
         `${did}`,
         [`${form.name}`, `${form.role}`]
       ];
-      console.log(schema)
+
       const schemaRegistry = new ethers.Contract(SCHEMA_REGISTRY, SchemaRegistryABI.abi, signer);
       const schemaTx = await schemaRegistry.createSchema(schema);
       await schemaTx.wait();
-      const credDef = [`did:indy2:indy_besu:${did}/anoncreds/v0/CLAIM_DEF/did:indy2:indy_besu:${did}/anoncreds/v0/SCHEMA/BasicIdentity/1.0.0/${did}`, `did:indy2:indy_besu:${did}`, `did:indy2:indy_besu:${did}/anoncreds/v0/SCHEMA/Mkt${did}/${did}`, "CL", "BasicIdentity", "<keys>"];
-      console.log(credDef)
+
+      const credDef = [
+        `did:indy2:indy_besu:${did}/anoncreds/v0/CLAIM_DEF/${schema[0]}`,
+        fullDid,
+        schema[0],
+        "CL",
+        "BasicIdentity",
+        "<keys>"
+      ];
+
       const credDefRegistry = new ethers.Contract(CREDENTIAL_DEFINITION_REGISTRY, CredentialDefinitionRegistryABI.abi, signer);
       const credTx = await credDefRegistry.createCredentialDefinition(credDef);
       await credTx.wait();
@@ -138,25 +152,52 @@ export default function RegisterIdentity() {
     }
   };
 
+  const handleCheckIdentity = async () => {
+    try {
+      if (!window.ethereum) return alert('Wallet não detectada');
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const signer = await provider.getSigner();
+      const address = await signer.getAddress();
+      const did = `${address.slice(2, 24)}`;
+      const fullSchema = `did:indy2:indy_besu:${did}/anoncreds/v0/SCHEMA/Mkt${did}/${did}`;
+      const schemaRegistry = new ethers.Contract(SCHEMA_REGISTRY, SchemaRegistryABI.abi, signer);
+      const result = await schemaRegistry.resolveSchema(fullSchema);
+      const attrs = result[0][4]; // name, role
+      setQueryResult(`👤 Nome: ${attrs[0]} | 📛 Perfil: ${attrs[1]}`);
+    } catch (err) {
+      console.error(err);
+      setQueryResult("❌ Nenhuma identidade encontrada para esta carteira.");
+    }
+  };
+
   return (
-    <Container>
-      <HomeLink onClick={() => navigate('/')}>🏠 Home</HomeLink>
-      <Title>Cadastrar Identidade</Title>
+    <Wrapper>
+      <Container>
+        <HomeLink onClick={() => navigate('/')}>🏠 Home</HomeLink>
+        <Title>Register Identity</Title>
 
-      <Label>Nome Completo</Label>
-      <Input name="name" onChange={handleChange} />
+        <Label>Full Name</Label>
+        <Input name="name" onChange={handleChange} />
 
-      <Label>Tipo de Perfil</Label>
-      <Select name="role" onChange={handleChange}>
-        <option value="">Selecione...</option>
-        <option value="asset-provider">Fornecedor de Ativo</option>
-        <option value="service-provider">Fornecedor de Serviço</option>
-        <option value="client">Cliente</option>
-      </Select>
+        <Label>Profile Type</Label>
+        <Select name="role" onChange={handleChange}>
+          <option value="">Select...</option>
+          <option value="asset-provider">Asset Provider</option>
+          <option value="service-provider">Service Provider</option>
+          <option value="client">Client</option>
+        </Select>
 
-      <Button onClick={handleRegister}>Criar Identidade</Button>
+        <Button onClick={handleRegister}>Create Identity</Button>
 
-      {status && <p style={{ marginTop: '1rem' }}>{status}</p>}
-    </Container>
+        {status && <p style={{ marginTop: '1rem' }}>{status}</p>}
+      </Container>
+
+      <Container>
+        <Title>Check Identity</Title>
+        <p>Use your wallet to check which profile is associated with your DID.</p>
+        <Button onClick={handleCheckIdentity}>🔍 Check My Identity</Button>
+        {queryResult && <p style={{ marginTop: '1rem' }}>{queryResult}</p>}
+      </Container>
+    </Wrapper>
   );
 }

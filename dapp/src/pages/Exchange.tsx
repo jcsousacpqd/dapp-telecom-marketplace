@@ -82,7 +82,6 @@ export default function ExchangePage() {
   const [signer, setSigner] = useState<any>(null);
   const [contract, setContract] = useState<any>(null);
   const [tlcBalance, setTlcBalance] = useState('0');
-  const [fiatBalance, setFiatBalance] = useState(100);
   const [exchangeAmount, setExchangeAmount] = useState('');
   const [transactions, setTransactions] = useState<string[]>([]);
   const navigate = useNavigate();
@@ -122,7 +121,6 @@ export default function ExchangePage() {
 
       const res = await response.json();
       if (res.success) {
-        setFiatBalance((prev) => prev - amount);
         await loadBalance(contract, account);
         setTransactions((prev) => [
           `Convertido $${amount.toFixed(2)} em ${amount.toFixed(2)} TLC`,
@@ -138,26 +136,6 @@ export default function ExchangePage() {
     }
   }
 
-  async function handleWithdraw() {
-    const amount = parseFloat(exchangeAmount);
-    if (!contract || isNaN(amount) || amount <= 0) return alert('Valor inválido');
-
-    try {
-      const tx = await contract.burn(ethers.parseUnits(amount.toString(), 18));
-      await tx.wait();
-      setFiatBalance((prev) => prev + amount);
-      await loadBalance(contract, account);
-      setTransactions((prev) => [
-        `Convertido ${amount.toFixed(2)} TLC em $${amount.toFixed(2)}`,
-        ...prev,
-      ]);
-      setExchangeAmount('');
-    } catch (err) {
-      console.error(err);
-      alert('Erro ao sacar: ' + err);
-    }
-  }
-
   return (
     <Container>
 
@@ -165,7 +143,6 @@ export default function ExchangePage() {
         <HomeLink onClick={() => navigate('/')}>🏠 Home</HomeLink>
         <h2>Exchange</h2>
         <p><strong>Conta:</strong> {account}</p>
-        <p><strong>Saldo em Reais:</strong> ${fiatBalance.toFixed(2)}</p>
         <p><strong>Saldo em Tokens:</strong> {tlcBalance} TLC</p>
 
         <Label>Valor</Label>
@@ -174,13 +151,7 @@ export default function ExchangePage() {
           value={exchangeAmount}
           onChange={(e) => setExchangeAmount(e.target.value)}
         />
-        <Button onClick={handleExchange}>Converter para TLC</Button>
-        <Button
-          onClick={handleWithdraw}
-          style={{ marginLeft: '1rem', background: '#0ea5e9' }}
-        >
-          Sacar em $
-        </Button>
+        <Button onClick={handleExchange}>Charge TLC</Button>
       </Box>
 
       <Box>

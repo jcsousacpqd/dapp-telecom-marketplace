@@ -46,54 +46,54 @@ export default function Dashboard() {
     <Container>
       <Sidebar>
         <Link to="/connect">
-          <MenuButton>🔗 Conectar Wallet</MenuButton>
-        </Link>
-
-        <Link to="/exchange">
-          <MenuButton>💱 Obter TLC</MenuButton>
-        </Link>
-
-        <Link to="/assets">
-          <MenuButton>🏗️ Ver Ativos</MenuButton>
-        </Link>
-
-        <Link to="/services">
-          <MenuButton>🛠️ Ver Serviços</MenuButton>
-        </Link>
-
-        <Link to="/publish-asset">
-          <MenuButton>📝 Publicar Ativo</MenuButton>
-        </Link>
-
-        <Link to="/publish-service">
-          <MenuButton>📢 Publicar Serviço</MenuButton>
+          <MenuButton>🔗 Connect Wallet</MenuButton>
         </Link>
 
         <Link to="/register">
-          <MenuButton>🆔 Cadastrar Identidade</MenuButton>
+          <MenuButton>🆔 Register Profile (DID)</MenuButton>
+        </Link>
+
+        <Link to="/exchange">
+          <MenuButton>💱 Charge TLC</MenuButton>
+        </Link>
+
+        <Link to="/publish-asset">
+          <MenuButton>📝 Publish Asset</MenuButton>
+        </Link>
+
+        <Link to="/publish-service">
+          <MenuButton>📢 Publish Service</MenuButton>
+        </Link>
+
+        <Link to="/assets">
+          <MenuButton>🏗️ View Assets</MenuButton>
+        </Link>
+
+        <Link to="/services">
+          <MenuButton>🛠️ View Services</MenuButton>
         </Link>
 
         <Link to="/admin">
-          <MenuButton>⚙️ Painel do Admin</MenuButton>
+          <MenuButton>⚙️ Admin Panel</MenuButton>
         </Link>
       </Sidebar>
 
       <Content>
-        <Title>Marketplace de Telecom</Title>
+        <Title>Telecom Marketplace</Title>
         <Paragraph>
-          Bem-vindo ao nosso marketplace descentralizado de infraestrutura de telecomunicações!
+          Welcome to our decentralized telecommunications infrastructure marketplace!
         </Paragraph>
         <Paragraph>
-          Aqui você pode:
+          Here you can:
           <ul>
-            <li>Tokenizar e alugar ativos físicos de telecomunicações</li>
-            <li>Publicar e contratar serviços técnicos ou operacionais</li>
-            <li>Gerenciar identidades digitais com segurança usando DIDs</li>
-            <li>Visualizar, contratar ou investir em recursos compartilhados</li>
+            <li>Tokenize and rent physical telecom assets</li>
+            <li>Publish and hire technical or operational services</li>
+            <li>Manage secure digital identities using DIDs</li>
+            <li>View, hire or invest in shared infrastructure</li>
           </ul>
         </Paragraph>
         <Paragraph>
-          Tudo com integração à blockchain, identidade auto-soberana e tokens TLC para pagamento e governança.
+          All integrated with blockchain, self-sovereign identity and TLC tokens for payments and governance.
         </Paragraph>
       </Content>
     </Container>
