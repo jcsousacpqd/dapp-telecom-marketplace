@@ -10,10 +10,7 @@ import AssetABI from '@/contracts/AssetsContract.json';
 import {
   HIRE_SERVICE_ADDRESS,
   HIRE_ASSET_ADDRESS,
-  SERVICES_ADDRESS,
-  ASSETS_ADDRESS,
 } from '@/utils/constants';
-import { AmbulanceIcon } from 'lucide-react';
 
 const Container = styled.div`
   max-width: 1000px;
@@ -84,53 +81,36 @@ export default function AdminDashboard() {
         const signer = await provider.getSigner();
         setSigner(signer);
 
-        const serviceContract = new ethers.Contract(
-          SERVICES_ADDRESS,
-          ServiceABI.abi,
-          provider
-        );
-        const assetContract = new ethers.Contract(
-          ASSETS_ADDRESS,
-          AssetABI.abi,
-          provider
-        );
-
         const svcRes = await fetch('http://localhost:3001/api/services');
         const svcData = await svcRes.json();
+        const hiredRes = await fetch('http://localhost:3001/api/hired-services');
+        const hiredData = await hiredRes.json();
 
-        const svcDisputes = await Promise.all(
-          svcData.map(async (svc: any) => {
-            try {
-              const renter = await serviceContract.getProvider(svc.id);
-              return {
-                id: svc.id,
-                renter,
-                amount: svc.finalPrice,
-              };
-            } catch {
-              return null;
-            }
-          })
-        );
+        const svcDisputes = hiredData.map((hire: any) => {
+          const svcInfo = svcData.find((s: any) => s.id === hire.id);
+          if (!svcInfo) return null;
+          return {
+            id: hire.id,
+            renter: hire.renter,
+            amount: svcInfo.finalPrice
+          };
+        }).filter((x: any) => x);
 
         const assetRes = await fetch('http://localhost:3001/api/assets');
         const assetData = await assetRes.json();
+        const hireAssetRes = await fetch('http://localhost:3001/api/hired-assets');
+        const hiredAssetsData = await hireAssetRes.json();
 
-        const assetDisputes = await Promise.all(
-          assetData.map(async (a: any) => {
-            try {
-              const renter = await assetContract.getSupplier(a.id);
-              return {
-                id: a.id,
-                renter,
-                slices: a.slices,
-                totalPrice: a.totalPrice
-              };
-            } catch {
-              return null;
-            }
-          })
-        );
+        const assetDisputes = hiredAssetsData.map((hire: any) => {
+          const assetInfo = assetData.find((a: any) => a.id === hire.assetId);
+          if (!assetInfo) return null;
+          return {
+            id: hire.assetId,
+            renter: hire.renter,
+            slices: hire.slices,
+            totalPrice: assetInfo.totalPrice
+          };
+        }).filter((x: any) => x);
 
         setServiceDisputes(svcDisputes.filter((x) => x));
         setAssetDisputes(assetDisputes.filter((x) => x));
@@ -159,7 +139,6 @@ export default function AdminDashboard() {
 
   async function handleAssetPayment(assetId: string, renter: string, totalPrice: string) {
     try {
-      console.log(assetId, renter, totalPrice)
       const contract = new ethers.Contract(HIRE_ASSET_ADDRESS, HireAssetABI.abi, signer);
       const tx = await contract.payAsset(assetId, renter, ethers.parseEther(totalPrice),
         ethers.parseEther('0'));
@@ -179,7 +158,7 @@ export default function AdminDashboard() {
         {serviceDisputes.map((d, i) => (
           <Card key={i}>
             <p><strong>ID:</strong> {d.id}</p>
-            <p><strong>Fornecedor:</strong> {d.renter}</p>
+            <p><strong>Locatário:</strong> {d.renter}</p>
             <p><strong>Valor Total:</strong> {d.amount} TLC</p>
             <Button onClick={() => handleServicePayment(d.id, d.renter, d.amount)}>
               💸 Efetuar Pagamento
@@ -193,7 +172,7 @@ export default function AdminDashboard() {
         {assetDisputes.map((d, i) => (
           <Card key={i}>
             <p><strong>ID:</strong> {d.id}</p>
-            <p><strong>Fornecedor:</strong> {d.renter}</p>
+            <p><strong>Locatário:</strong> {d.renter}</p>
             <p><strong>Slices Contratadas:</strong> {d.slices}</p>
             <p><strong>Valor Total:</strong> {d.totalPrice} TLC</p>
             <Button onClick={() => handleAssetPayment(d.id, d.renter, d.totalPrice)}>

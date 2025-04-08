@@ -44,6 +44,34 @@ app.post('/mint', async (req, res) => {
   }
 });
 
+const { loadJSON, saveJSON } = require('./data/db.js');
+
+app.post('/api/hired-asset', (req, res) => {
+  const { assetId, renter, slices } = req.body;
+  const current = loadJSON('hired-assets');
+  current.push({ assetId, renter, slices });
+  saveJSON('hired-assets', current);
+  res.json({ message: '✅ Contratação registrada com sucesso.' });
+});
+
+app.get('/api/hired-assets', (req, res) => {
+  const current = loadJSON('hired-assets');
+  res.json(current);
+});
+
+app.post('/api/hired-services', (req, res) => {
+  const { id, renter } = req.body;
+  const current = loadJSON('hired-services');
+  current.push({ id, renter });
+  saveJSON('hired-services', current);
+  res.json({ message: '✅ Service hire registered successfully.' });
+});
+
+app.get('/api/hired-services', (req, res) => {
+  const current = loadJSON('hired-services');
+  res.json(current);
+});
+
 app.listen(port, () => {
   console.log(`🟢 Backend pronto em http://localhost:${port}`);
 });

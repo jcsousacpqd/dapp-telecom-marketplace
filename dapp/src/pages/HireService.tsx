@@ -47,14 +47,6 @@ const Label = styled.label`
   display: block;
 `;
 
-const Input = styled.input`
-  width: 100%;
-  padding: 0.6rem;
-  margin-top: 0.2rem;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-`;
-
 const Button = styled.button`
   margin-top: 1.5rem;
   background: #22c55e;
@@ -71,6 +63,8 @@ export default function HireServicePage() {
   const [slices, setSlices] = useState('');
   const [signer, setSigner] = useState<any>(null);
   const navigate = useNavigate();
+  const [service, setService] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function connectWallet() {
@@ -80,8 +74,21 @@ export default function HireServicePage() {
         setSigner(signer);
       }
     }
+    async function fetchServiceDetails() {
+      try {
+        const res = await fetch('http://localhost:3001/api/services');
+        const data = await res.json();
+        const found = data.find((svc: any) => svc.id === id);
+        setService(found);
+      } catch (err) {
+        console.error("Error fetching service:", err);
+      } finally {
+        setLoading(false);
+      }
+    }
     connectWallet();
-  }, []);
+    fetchServiceDetails();
+  }, [id]);
 
   const handleHire = async () => {
     if (!signer || !id) return;
@@ -89,35 +96,52 @@ export default function HireServicePage() {
     try {
       const token = new ethers.Contract(TELECOIN_ADDRESS, TLCAbi.abi, signer);
       const hireS = new ethers.Contract(HIRE_SERVICE_ADDRESS, HireServiceABI.abi, signer);
-      const Service = new ethers.Contract(SERVICES_ADDRESS, ServiceContract.abi, signer);
-
 
       const value = ethers.parseUnits("10000", 18);
 
-      // 1. Aprovação
+      // 1. Approve token transfer
       const approveTx = await token.approve(SERVICES_ADDRESS, value);
       await approveTx.wait();
 
-      // 2. Contratação
+      // 2. Hire service
       const hireSTx = await hireS.hireService(id);
       await hireSTx.wait();
+      // 3. Save renter info in backend
+      const address = await signer.getAddress();
+      await fetch('http://localhost:3001/api/hired-services', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, renter: address })
+      });
 
-      alert('Serviço contratado com sucesso!');
+      alert('Service successfully hired!');
       setSlices('');
     } catch (err) {
       console.error(err);
-      alert('Erro ao contratar serviço.');
+      alert('Error hiring the service.');
     }
   };
 
   return (
     <Container>
       <HomeLink onClick={() => navigate('/')}>🏠 Home</HomeLink>
-      <Title>Contratar Serviço</Title>
-      <Label>ID do Serviço:</Label>
-      <p><strong>{id}</strong></p>
+      <Title>Hire Service</Title>
 
-      <Button onClick={handleHire}>Contratar</Button>
+      {loading ? (
+        <p>Loading service data...</p>
+      ) : service ? (
+        <>
+          <Label>ID: {service.id}</Label>
+          <Label>Description: {service.description}</Label>
+          <Label>Available Months: {service.monthsAvailable}</Label>
+          <Label>Initial Price: {service.price} TLC</Label>
+          <Label>Final Price: {service.finalPrice} TLC</Label>
+        </>
+      ) : (
+        <p>Service not found.</p>
+      )}
+
+      <Button onClick={handleHire}>Hire</Button>
     </Container>
   );
 }

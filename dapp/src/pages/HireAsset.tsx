@@ -70,6 +70,8 @@ export default function HireAssetPage() {
   const { id } = useParams();
   const [slices, setSlices] = useState('');
   const [signer, setSigner] = useState<any>(null);
+  const [asset, setAsset] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -80,8 +82,23 @@ export default function HireAssetPage() {
         setSigner(signer);
       }
     }
+
+    async function fetchAssetDetails() {
+      try {
+        const res = await fetch('http://localhost:3001/api/assets');
+        const data = await res.json();
+        const found = data.find((a: any) => a.id === id);
+        setAsset(found);
+      } catch (err) {
+        console.error("Error fetching asset:", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+
     connectWallet();
-  }, []);
+    fetchAssetDetails();
+  }, [id]);
 
   const handleHire = async () => {
     if (!signer || !id || !slices) return;
@@ -89,44 +106,74 @@ export default function HireAssetPage() {
     try {
       const token = new ethers.Contract(TELECOIN_ADDRESS, TLCAbi.abi, signer);
       const hire = new ethers.Contract(HIRE_ASSET_ADDRESS, HireAssetABI.abi, signer);
-      const asset = new ethers.Contract(ASSETS_ADDRESS, AssetContract.abi, signer);
 
+      const value = ethers.parseUnits("100000", 18); // fixed value for now
 
-      const value = ethers.parseUnits("100000", 18);
-
-      // 1. Aprovação
+      // 1. Approve tokens
       const approveTx = await token.approve(ASSETS_ADDRESS, value);
       await approveTx.wait();
 
-      // 2. Contratação
+      // 2. Hire asset
       const hireTx = await hire.hireAsset(id, parseInt(slices));
       await hireTx.wait();
+      const userAddress = await signer.getAddress();
 
-      alert('Ativo contratado com sucesso!');
+      // Salvar contratação no backend
+      await fetch('http://localhost:3001/api/hired-asset', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          assetId: id,
+          renter: userAddress,
+          slices: parseInt(slices)
+        })
+      });
+
+      alert('Asset successfully hired!');
       setSlices('');
     } catch (err) {
       console.error(err);
-      alert('Erro ao contratar ativo.');
+      alert('Error hiring asset.');
     }
   };
 
   return (
     <Container>
       <HomeLink onClick={() => navigate('/')}>🏠 Home</HomeLink>
-      <Title>Contratar Ativo</Title>
-      <Label>ID do Ativo:</Label>
-      <p><strong>{id}</strong></p>
+      <Title>Hire Asset</Title>
 
-      <Label>Quantidade de Slices:</Label>
-      <Input
-        placeholder="Ex: 2"
-        value={slices}
-        onChange={(e) => setSlices(e.target.value)}
-        type="number"
-        min={1}
-      />
+      {loading ? (
+        <p>Loading asset data...</p>
+      ) : asset ? (
+        <>
+          <Label>ID:</Label>
+          <p><strong>{asset.id}</strong></p>
 
-      <Button onClick={handleHire}>Contratar</Button>
+          <Label>Description:</Label>
+          <p>{asset.description}</p>
+
+          <Label>Total Price:</Label>
+          <p>{asset.totalPrice} TLC</p>
+
+          <Label>Available Slices:</Label>
+          <p>{asset.slices}</p>
+
+          <Label>Price per Slice:</Label>
+          <p>{asset.pricePerSlice} TLC</p>
+
+          <Label>Number of Slices to Hire:</Label>
+          <Input
+            placeholder="e.g. 2"
+            value={slices}
+            onChange={(e) => setSlices(e.target.value)}
+            type="number"
+            min={1}
+          />
+          <Button onClick={handleHire}>Hire</Button>
+        </>
+      ) : (
+        <p>Asset not found.</p>
+      )}
     </Container>
   );
 }
