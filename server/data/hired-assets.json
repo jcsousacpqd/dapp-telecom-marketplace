@@ -1,0 +1,37 @@
+[
+  {
+    "assetId": "asset_881",
+    "renter": "0xF8Afa80064BF9E23389a7eD955ee67156C807B8e",
+    "slices": 3
+  },
+  {
+    "assetId": "asset01",
+    "renter": "0x7B8b8B568680f35deF6A1f3aDD64121bc60A5835",
+    "slices": 10
+  },
+  {
+    "assetId": "test_asset_new01",
+    "renter": "0x7B8b8B568680f35deF6A1f3aDD64121bc60A5835",
+    "slices": 2
+  },
+  {
+    "assetId": "test_asset_new02",
+    "renter": "0x7B8b8B568680f35deF6A1f3aDD64121bc60A5835",
+    "slices": 2
+  },
+  {
+    "assetId": "asset_new_03",
+    "renter": "0x7B8b8B568680f35deF6A1f3aDD64121bc60A5835",
+    "slices": 2
+  },
+  {
+    "assetId": "tower-sp-001",
+    "renter": "0x7B8b8B568680f35deF6A1f3aDD64121bc60A5835",
+    "slices": 2
+  },
+  {
+    "assetId": "test_asset_tower_1",
+    "renter": "0x7B8b8B568680f35deF6A1f3aDD64121bc60A5835",
+    "slices": 2
+  }
+]

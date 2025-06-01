@@ -1,0 +1,34 @@
+[
+  {
+    "id": "service_test_01",
+    "renter": "0xD013b6B78C0594bd6D31b97ccBaD0262b9E88d83"
+  },
+  {
+    "id": "service001",
+    "renter": "0x2fD9dFfcC1110c08AE6ff26E155c2224180BfA8D"
+  },
+  {
+    "id": "service_asset_0001",
+    "renter": "0x2fD9dFfcC1110c08AE6ff26E155c2224180BfA8D"
+  },
+  {
+    "id": "service_asset_new_01",
+    "renter": "0x2fD9dFfcC1110c08AE6ff26E155c2224180BfA8D"
+  },
+  {
+    "id": "service_asset_new_03",
+    "renter": "0x2fD9dFfcC1110c08AE6ff26E155c2224180BfA8D"
+  },
+  {
+    "id": "test_merge_service",
+    "renter": "0x9DEbC37485C850821ee6403117666d6c8b7aCcdC"
+  },
+  {
+    "id": "service_test_sem_ativo",
+    "renter": "0x7B8b8B568680f35deF6A1f3aDD64121bc60A5835"
+  },
+  {
+    "id": "service_com_ativo1",
+    "renter": "0x7B8b8B568680f35deF6A1f3aDD64121bc60A5835"
+  }
+]
