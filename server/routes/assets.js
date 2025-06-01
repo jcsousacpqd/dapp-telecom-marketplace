@@ -3,20 +3,14 @@ const router = express.Router();
 const { loadJSON, saveJSON } = require('../data/db.js');
 
 router.post('/register-asset', (req, res) => {
-  const {
-    id, description, amount, slices,
-    monthsAvailable, totalPrice, pricePerSlice
-  } = req.body;
+  const asset = req.body;
 
-  if (!id || !description) {
+  if (!asset.id || !asset.description) {
     return res.status(400).json({ error: 'Dados obrigatórios ausentes.' });
   }
 
   const current = loadJSON('assets');
-  current.push({
-    id, description, amount, slices,
-    monthsAvailable, totalPrice, pricePerSlice
-  });
+  current.push(asset);
   saveJSON('assets', current);
 
   return res.status(201).json({ message: 'Ativo registrado com sucesso' });
