@@ -34,10 +34,9 @@ class BlockchainService {
   }
 
   async getTLCBalance(address: string): Promise<string> {
+    await this.ensureProvider();
     if (!this.provider) throw new Error("Provider não inicializado")
-
     const contract = new ethers.Contract(CONTRACTS.TELECOIN.address, CONTRACTS.TELECOIN.abi, this.provider)
-
     const balance = await contract.balanceOf(address)
     return ethers.formatEther(balance)
   }
@@ -313,6 +312,7 @@ class BlockchainService {
   }
 
   async getETHBalance(address: string): Promise<string> {
+    await this.ensureProvider();
     if (!this.provider) throw new Error("Provider não inicializado");
     const balance = await this.provider.getBalance(address);
     return ethers.formatEther(balance);

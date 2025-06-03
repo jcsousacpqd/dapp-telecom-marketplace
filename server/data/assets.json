@@ -1,114 +1,32 @@
 [
   {
-    "id": "asset_881",
-    "description": "Ativo",
-    "amount": 100,
-    "slices": 5,
-    "monthsAvailable": 2,
-    "totalPrice": "10",
-    "pricePerSlice": "10"
-  },
-  {
-    "id": "asset_001",
-    "description": "Teste de Serviço",
-    "amount": 100,
-    "slices": 5,
-    "monthsAvailable": 2,
-    "totalPrice": "10",
-    "pricePerSlice": "10"
-  },
-  {
-    "id": "asset01",
-    "description": "Teste de Ativo 1",
-    "amount": 10,
-    "slices": 10,
-    "monthsAvailable": 2,
-    "totalPrice": "10",
-    "pricePerSlice": "1"
-  },
-  {
-    "id": "test_asset_new01",
-    "description": "test_asset_new01",
-    "amount": 10,
-    "slices": 2,
-    "monthsAvailable": 2,
-    "totalPrice": "10",
-    "pricePerSlice": "10"
-  },
-  {
-    "id": "test_asset_new02",
-    "description": "test_asset_new02",
-    "amount": 10,
-    "slices": 2,
-    "monthsAvailable": 2,
-    "totalPrice": "10",
-    "pricePerSlice": "10"
-  },
-  {
-    "id": "asset_new_03",
-    "description": "asset_new_03",
-    "amount": 10,
-    "slices": 2,
-    "monthsAvailable": 1,
-    "totalPrice": "10",
-    "pricePerSlice": "10"
-  },
-  {
-    "id": "tower-sp-001",
-    "description": "Teste de Ativo",
-    "amount": 1,
-    "slices": 2,
-    "monthsAvailable": 2,
-    "totalPrice": "10",
-    "pricePerSlice": "5.00"
-  },
-  {
-    "id": "test_asset_tower_1",
-    "description": "Teste de Ativo 01",
-    "amount": 2,
-    "slices": 2,
-    "monthsAvailable": 8,
-    "totalPrice": "10",
-    "pricePerSlice": "5.00"
-  },
-  {
-    "id": "test_asset_role_1",
+    "id": "7771111",
     "description": "Teste",
     "amount": 2,
     "slices": 2,
     "monthsAvailable": 12,
-    "totalPrice": "10",
-    "pricePerSlice": "5.00"
+    "totalPrice": "30",
+    "pricePerSlice": "15.00",
+    "name": "Torre 1 ",
+    "type": "physical",
+    "category": "infrastructure",
+    "provider": "CPQD",
+    "price": "20",
+    "priceUnit": "month",
+    "totalValue": "30",
+    "availableSlices": 2,
+    "location": "Campinas",
+    "image": "https://imgs.search.brave.com/BEsE4cvi-Y4lYJgfjNVd_BEwC6kYcsHe_M5jh6ks7-I/rs:fit:500:0:0:0/g:ce/aHR0cHM6Ly9oaWRz/Lm9yZy5ici93cC1j/b250ZW50L3VwbG9h/ZHMvMjAyMy8xMS9D/UFFEX0xvZ29fUG9z/aXRpdm9fUkdCLTEw/MzB4MzY4LTEtMzAw/eDEwNy53ZWJw",
+    "features": [
+      "Heigh:21"
+    ],
+    "contractType": "SLA Premium",
+    "tokenized": true,
+    "verified": true,
+    "txHash": "0x2350054ce52c5611e4cdc315825ada81dcbc272a9ee5e91397c1cc04995c21af"
   },
   {
-    "id": "asset-test-new2",
-    "description": "Teste de Ativo",
-    "amount": 2,
-    "slices": 10,
-    "monthsAvailable": 2,
-    "totalPrice": "10",
-    "pricePerSlice": "1.00"
-  },
-  {
-    "id": "service_asset_871",
-    "description": "Teste de Ativo",
-    "amount": 2,
-    "slices": 2,
-    "monthsAvailable": 2,
-    "totalPrice": "10",
-    "pricePerSlice": "5.00"
-  },
-  {
-    "id": "9993311",
-    "description": "Teste",
-    "amount": 2,
-    "slices": 2,
-    "monthsAvailable": 2,
-    "totalPrice": "20",
-    "pricePerSlice": "10.00"
-  },
-  {
-    "id": "7771111",
+    "id": "1234122",
     "description": "Teste",
     "amount": 2,
     "slices": 2,

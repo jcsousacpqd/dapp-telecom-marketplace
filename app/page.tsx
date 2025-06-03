@@ -39,6 +39,8 @@ import {
 } from "@/components/ui/dialog"
 import { Progress } from "@/components/ui/progress"
 import Link from "next/link"
+import { blockchainService } from "@/lib/blockchain"
+import { useRouter } from "next/navigation"
 
 // Tipos de ativos de telecomunicações
 const assets = [
@@ -227,6 +229,70 @@ const userProfiles = [
   { id: "asset_provider", name: "Provedor de Ativos", description: "Ofereça infraestrutura física" },
 ]
 
+// Tipos e traduções globais
+
+type Lang = 'pt' | 'en' | 'es' | 'fr';
+interface Translation {
+  [key: string]: any;
+  connectWallet: string;
+  startMarketplace: string;
+  searchPlaceholder: string;
+  welcome: string;
+  selectProfile: string;
+  dashboard: string;
+  exchange: string;
+  assets: string;
+  services: string;
+  publishAsset: string;
+  publishService: string;
+  registerIdentity: string;
+  adminPanel: string;
+  quickAccess: string;
+  manageAssets: string;
+  categories: string;
+  networkStatus: string;
+  blockchain: string;
+  online: string;
+  blocks: string;
+  activeNodes: string;
+  contracts: string;
+  networkUsage: string;
+  highlights: string;
+  priceLow: string;
+  priceHigh: string;
+  newest: string;
+  availability: string;
+  allItems: string;
+  infrastructure: string;
+  equipment: string;
+  connectivity: string;
+  licenses: string;
+  service: string;
+  foundItems: (n: number) => string;
+  infraAssets: string;
+  telecomServices: string;
+  hireAsset: string;
+  hireService: string;
+  requiredAssets: string;
+  totalValue: string;
+  location: string;
+  duration: string;
+  contractType: string;
+  tokenized: string;
+  verified: string;
+  smartContracts: string;
+  activeContracts: string;
+  myAssets: string;
+  myServices: string;
+  myBalance: string;
+  availableBalance: string;
+  locked: string;
+  nextPayment: string;
+  addFunds: string;
+  recentActivity: string;
+  connectToAccess: string;
+}
+
 export default function TelecomMarketplace() {
   const [selectedCategory, setSelectedCategory] = useState("all")
   const [searchQuery, setSearchQuery] = useState("")
@@ -237,6 +303,68 @@ export default function TelecomMarketplace() {
   const [walletConnected, setWalletConnected] = useState(false)
   const [walletAddress, setWalletAddress] = useState("")
   const [tlcBalance, setTlcBalance] = useState(0)
+  const [lang, setLang] = useState<Lang>('pt')
+  const t: Translation = {
+    connectWallet: "Conectar Carteira",
+    startMarketplace: "Iniciar o Marketplace",
+    searchPlaceholder: "Buscar por torres, antenas, espectro...",
+    welcome: "Bem-vindo ao D-MTS",
+    selectProfile: "Selecione seu perfil para continuar",
+    dashboard: "Dashboard",
+    exchange: "Exchange TLC",
+    assets: "Ver Ativos",
+    services: "Ver Serviços",
+    publishAsset: "Publicar Ativo",
+    publishService: "Publicar Serviço",
+    registerIdentity: "Identidade DID",
+    adminPanel: "Painel Admin",
+    quickAccess: "Acesso Rápido",
+    manageAssets: "Gerencie seus ativos, serviços e contratos de forma descentralizada",
+    categories: "Categorias",
+    networkStatus: "Status da Rede",
+    blockchain: "Blockchain",
+    online: "Online",
+    blocks: "Blocos",
+    activeNodes: "Nós Ativos",
+    contracts: "Contratos",
+    networkUsage: "Uso da Rede",
+    highlights: "Destaques",
+    priceLow: "Preço: Menor para Maior",
+    priceHigh: "Preço: Maior para Menor",
+    newest: "Mais Recentes",
+    availability: "Disponibilidade",
+    allItems: "Todos os Itens",
+    infrastructure: "Infraestrutura",
+    equipment: "Equipamentos",
+    connectivity: "Conectividade",
+    licenses: "Licenças",
+    service: "Serviços",
+    foundItems: (n: number) => `${n} itens encontrados`,
+    infraAssets: "Ativos de Infraestrutura",
+    telecomServices: "Serviços de Telecomunicações",
+    hireAsset: "Contratar Ativo",
+    hireService: "Contratar Serviço",
+    requiredAssets: "Ativos Necessários:",
+    totalValue: "Valor Total:",
+    location: "Localização:",
+    duration: "Duração:",
+    contractType: "Tipo de Contrato",
+    tokenized: "Tokenizado",
+    verified: "Verificado",
+    smartContracts: "Smart Contracts",
+    activeContracts: "Contratos Ativos",
+    myAssets: "Meus Ativos",
+    myServices: "Meus Serviços",
+    myBalance: "Meu Saldo",
+    availableBalance: "Saldo disponível",
+    locked: "Bloqueado em contratos",
+    nextPayment: "Próximo pagamento",
+    addFunds: "Adicionar Fundos",
+    recentActivity: "Atividade Recente",
+    connectToAccess: "Para acessar o marketplace descentralizado, você precisa conectar sua carteira digital e criar sua identidade descentralizada (DID).",
+  }
+
+  const router = useRouter();
 
   // Filtrar itens com base na categoria e busca
   const filteredAssets = assets.filter((asset) => {
@@ -259,11 +387,23 @@ export default function TelecomMarketplace() {
     setFavorites((prev) => (prev.includes(id) ? prev.filter((itemId) => itemId !== id) : [...prev, id]))
   }
 
-  const connectWallet = () => {
-    // Simulação de conexão com carteira digital
-    setWalletConnected(true)
-    setWalletAddress("0x71C7656EC7ab88b098defB751B7401B5f6d8976F")
-    setTlcBalance(5000)
+  const connectWallet = async () => {
+    try {
+      const address = await blockchainService.connectWallet();
+      setWalletConnected(true);
+      setWalletAddress(address);
+      try {
+        const balance = await blockchainService.getTLCBalance(address);
+        setTlcBalance(Number(balance));
+      } catch {
+        setTlcBalance(0);
+      }
+      router.push("/dashboard");
+    } catch {
+      setWalletConnected(false);
+      setWalletAddress("");
+      setTlcBalance(0);
+    }
   }
 
   const disconnectWallet = () => {
@@ -275,1071 +415,78 @@ export default function TelecomMarketplace() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
       {/* Header */}
-      <header className="bg-white/80 backdrop-blur-md border-b sticky top-0 z-50">
+      <header className="bg-white border-b border-blue-100 sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl flex items-center justify-center">
-                <Database className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                  D-MTS
-                </h1>
-                <p className="text-sm text-muted-foreground">Decentralized Telecom Marketplace</p>
-              </div>
+          <div className="flex items-center gap-3">
+            <div className="flex flex-row items-center gap-2">
+              <img src="/IEEE-ICBC-Logo.png" alt="IEEE ICBC Logo" className="h-10 w-auto" />
+              <img src="/logo-cpqd.webp" alt="D-MTS Logo" className="h-10 w-auto" />
             </div>
-
-            <div className="flex items-center gap-4">
-              <Select defaultValue="pt">
-                <SelectTrigger className="w-24">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="en">🇺🇸 EN</SelectItem>
-                  <SelectItem value="pt">🇧🇷 PT</SelectItem>
-                  <SelectItem value="es">🇪🇸 ES</SelectItem>
-                  <SelectItem value="fr">🇫🇷 FR</SelectItem>
-                </SelectContent>
-              </Select>
-
-              {walletConnected ? (
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <Button variant="outline" className="gap-2">
-                      <Wallet className="w-4 h-4" />
-                      <span className="hidden md:inline">
-                        {walletAddress.substring(0, 6)}...{walletAddress.substring(walletAddress.length - 4)}
-                      </span>
-                      <Badge variant="secondary" className="ml-1">
-                        {tlcBalance} TLC
-                      </Badge>
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>Carteira Digital</DialogTitle>
-                      <DialogDescription>Gerencie sua identidade digital e tokens</DialogDescription>
-                    </DialogHeader>
-                    <div className="space-y-4 py-4">
-                      <div className="space-y-2">
-                        <div className="flex justify-between">
-                          <span className="text-sm text-muted-foreground">Endereço</span>
-                          <span className="text-sm font-medium">{walletAddress}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-sm text-muted-foreground">Saldo TLC</span>
-                          <span className="text-sm font-medium">{tlcBalance} TLC</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-sm text-muted-foreground">Status DID</span>
-                          <Badge variant="outline" className="text-green-600 border-green-600">
-                            Verificado
-                          </Badge>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-sm text-muted-foreground">Perfil</span>
-                          <Badge>{userProfiles.find((p) => p.id === userProfile)?.name}</Badge>
-                        </div>
-                      </div>
-
-                      <div className="space-y-2">
-                        <h4 className="text-sm font-medium">Contratos Ativos</h4>
-                        <div className="bg-slate-50 p-3 rounded-md">
-                          <div className="flex justify-between mb-1">
-                            <span className="text-xs">Torre de Telecomunicações T-450</span>
-                            <Badge variant="outline" className="text-xs">
-                              Ativo
-                            </Badge>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-xs text-muted-foreground">Validade</span>
-                            <span className="text-xs">12/12/2025</span>
-                          </div>
-                        </div>
-                      </div>
-
-                      <Button variant="destructive" onClick={disconnectWallet} className="w-full">
-                        Desconectar Carteira
-                      </Button>
-                    </div>
-                  </DialogContent>
-                </Dialog>
-              ) : (
-                <Button variant="outline" onClick={connectWallet} className="gap-2">
-                  <Wallet className="w-4 h-4" />
-                  <span className="hidden md:inline">Conectar Carteira</span>
-                </Button>
-              )}
-
-              <Button variant="outline" size="icon">
-                <Heart className="w-4 h-4" />
-              </Button>
-
-              <Button variant="outline" size="icon" className="relative">
-                <ShoppingCart className="w-4 h-4" />
-                <Badge className="absolute -top-2 -right-2 w-5 h-5 p-0 flex items-center justify-center text-xs">
-                  3
-                </Badge>
-              </Button>
+            <div>
+              <h1 className="text-2xl font-bold text-[#0057b7]">D-MTS</h1>
+              <p className="text-sm text-blue-900">Decentralized Telecom Marketplace</p>
             </div>
           </div>
         </div>
       </header>
 
       {/* Hero Section */}
-      <section className="bg-gradient-to-r from-blue-600 via-purple-600 to-blue-800 text-white py-16">
+      <section className="bg-gradient-to-b from-[#0057b7] via-blue-600 to-[#ffd600] text-white py-16 relative">
         <div className="container mx-auto px-4 text-center">
           <h2 className="text-4xl md:text-6xl font-bold mb-6">
             Marketplace Descentralizado
-            <span className="block bg-gradient-to-r from-yellow-400 to-orange-400 bg-clip-text text-transparent">
+            <span className="block bg-gradient-to-r from-blue-600 to-yellow-400 bg-clip-text">
               para Telecomunicações
             </span>
           </h2>
           <p className="text-xl mb-8 text-blue-100 max-w-2xl mx-auto">
-            Compartilhe e contrate infraestrutura de telecomunicações com segurança e transparência através de contratos
-            inteligentes e identidades digitais descentralizadas.
+            Compartilhe e contrate infraestrutura de telecomunicações com segurança e transparência através de contratos inteligentes e identidades digitais descentralizadas.
           </p>
+          <div className="text-center py-12">
+            <h3 className="text-2xl font-bold mb-4">Let's Get Started</h3>
+            <p className="text-white-200 mb-8 max-w-md mx-auto">
+              Para acessar o marketplace descentralizado, você precisa conectar sua carteira digital e criar sua identidade descentralizada (DID).
+            </p>
 
-          {!walletConnected && (
-            <div className="flex flex-col md:flex-row gap-4 max-w-md mx-auto mb-8">
-              <Button
-                size="lg"
-                className="bg-white text-blue-600 hover:bg-gray-100 h-12 px-8 w-full"
+            <div className="mt-10 grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl mx-auto">
+              <div
+                className="rounded-xl border border-blue-200 bg-white/80 p-6 flex flex-col items-center shadow hover:shadow-lg transition cursor-pointer hover:bg-blue-50"
                 onClick={connectWallet}
               >
-                <Key className="w-5 h-5 mr-2" />
-                Conectar Carteira Digital
-              </Button>
-            </div>
-          )}
-
-          {walletConnected && (
-            <div className="flex flex-col md:flex-row gap-4 max-w-2xl mx-auto">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                <Input
-                  placeholder="Buscar por torres, antenas, espectro..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10 h-12 bg-white/10 border-white/20 text-white placeholder:text-white/60"
-                />
+                <Wallet className="w-8 h-8 text-blue-700 mb-2" />
+                <span className="font-semibold text-blue-900 text-lg mb-1">Já tenho carteira</span>
+                <span className="text-blue-700 text-sm">Conectar carteira existente</span>
               </div>
-              <Button size="lg" className="bg-white text-blue-600 hover:bg-gray-100 h-12 px-8">
-                <Search className="w-5 h-5 mr-2" />
-                Buscar
-              </Button>
+              <div
+                className="rounded-xl border border-yellow-300 bg-white/80 p-6 flex flex-col items-center shadow hover:shadow-lg transition cursor-pointer hover:bg-yellow-50"
+                onClick={() => router.push('/connect-wallet')}
+              >
+                <Key className="w-8 h-8 text-yellow-500 mb-2" />
+                <span className="font-semibold text-yellow-700 text-lg mb-1">Criar nova carteira</span>
+                <span className="text-yellow-700 text-sm">Gerar carteira digital e identidade</span>
+              </div>
             </div>
-          )}
-
-          <div className="flex flex-wrap justify-center gap-4 mt-8">
-            <Badge variant="secondary" className="bg-white/20 text-white border-white/30">
-              <Lock className="w-4 h-4 mr-1" />
-              Contratos Inteligentes
-            </Badge>
-            <Badge variant="secondary" className="bg-white/20 text-white border-white/30">
-              <Key className="w-4 h-4 mr-1" />
-              Identidade Descentralizada
-            </Badge>
-            <Badge variant="secondary" className="bg-white/20 text-white border-white/30">
-              <Database className="w-4 h-4 mr-1" />
-              Blockchain Hyperledger
-            </Badge>
           </div>
         </div>
       </section>
 
-      {/* Interactive Panels - Only show when wallet is connected */}
-      {walletConnected && (
-        <section className="py-16 bg-white">
-          <div className="container mx-auto px-4">
-            <div className="text-center mb-12">
-              <h2 className="text-3xl font-bold mb-4">Acesso Rápido</h2>
-              <p className="text-muted-foreground text-lg">
-                Gerencie seus ativos, serviços e contratos de forma descentralizada
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-              <Link href="/dashboard">
-                <Card className="group hover:shadow-xl transition-all duration-300 cursor-pointer border-0 shadow-md">
-                  <CardContent className="p-6 text-center">
-                    <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                      <Database className="w-8 h-8 text-white" />
-                    </div>
-                    <h3 className="font-semibold text-lg mb-2 group-hover:text-blue-600 transition-colors">
-                      Dashboard
-                    </h3>
-                    <p className="text-sm text-muted-foreground">Visão geral completa</p>
-                  </CardContent>
-                </Card>
-              </Link>
-
-              <Link href="/exchange">
-                <Card className="group hover:shadow-xl transition-all duration-300 cursor-pointer border-0 shadow-md">
-                  <CardContent className="p-6 text-center">
-                    <div className="w-16 h-16 bg-gradient-to-r from-green-500 to-green-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                      <Coins className="w-8 h-8 text-white" />
-                    </div>
-                    <h3 className="font-semibold text-lg mb-2 group-hover:text-green-600 transition-colors">
-                      Exchange TLC
-                    </h3>
-                    <p className="text-sm text-muted-foreground">Comprar tokens</p>
-                  </CardContent>
-                </Card>
-              </Link>
-
-              <Link href="/assets">
-                <Card className="group hover:shadow-xl transition-all duration-300 cursor-pointer border-0 shadow-md">
-                  <CardContent className="p-6 text-center">
-                    <div className="w-16 h-16 bg-gradient-to-r from-indigo-500 to-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                      <Building className="w-8 h-8 text-white" />
-                    </div>
-                    <h3 className="font-semibold text-lg mb-2 group-hover:text-indigo-600 transition-colors">
-                      Ver Ativos
-                    </h3>
-                    <p className="text-sm text-muted-foreground">Explorar infraestrutura</p>
-                  </CardContent>
-                </Card>
-              </Link>
-
-              <Link href="/services">
-                <Card className="group hover:shadow-xl transition-all duration-300 cursor-pointer border-0 shadow-md">
-                  <CardContent className="p-6 text-center">
-                    <div className="w-16 h-16 bg-gradient-to-r from-pink-500 to-pink-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                      <Server className="w-8 h-8 text-white" />
-                    </div>
-                    <h3 className="font-semibold text-lg mb-2 group-hover:text-pink-600 transition-colors">
-                      Ver Serviços
-                    </h3>
-                    <p className="text-sm text-muted-foreground">Explorar serviços</p>
-                  </CardContent>
-                </Card>
-              </Link>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <Link href="/publish-asset">
-                <Card className="group hover:shadow-xl transition-all duration-300 cursor-pointer border-0 shadow-md">
-                  <CardContent className="p-6 text-center">
-                    <div className="w-16 h-16 bg-gradient-to-r from-orange-500 to-orange-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                      <Building className="w-8 h-8 text-white" />
-                    </div>
-                    <h3 className="font-semibold text-lg mb-2 group-hover:text-orange-600 transition-colors">
-                      Publicar Ativo
-                    </h3>
-                    <p className="text-sm text-muted-foreground">Tokenizar infraestrutura</p>
-                  </CardContent>
-                </Card>
-              </Link>
-
-              <Link href="/publish-service">
-                <Card className="group hover:shadow-xl transition-all duration-300 cursor-pointer border-0 shadow-md">
-                  <CardContent className="p-6 text-center">
-                    <div className="w-16 h-16 bg-gradient-to-r from-cyan-500 to-cyan-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                      <Server className="w-8 h-8 text-white" />
-                    </div>
-                    <h3 className="font-semibold text-lg mb-2 group-hover:text-cyan-600 transition-colors">
-                      Publicar Serviço
-                    </h3>
-                    <p className="text-sm text-muted-foreground">Oferecer serviços</p>
-                  </CardContent>
-                </Card>
-              </Link>
-
-              <Link href="/register-identity">
-                <Card className="group hover:shadow-xl transition-all duration-300 cursor-pointer border-0 shadow-md">
-                  <CardContent className="p-6 text-center">
-                    <div className="w-16 h-16 bg-gradient-to-r from-purple-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                      <User className="w-8 h-8 text-white" />
-                    </div>
-                    <h3 className="font-semibold text-lg mb-2 group-hover:text-purple-600 transition-colors">
-                      Identidade DID
-                    </h3>
-                    <p className="text-sm text-muted-foreground">Registrar perfil</p>
-                  </CardContent>
-                </Card>
-              </Link>
-
-              <Link href="/admin">
-                <Card className="group hover:shadow-xl transition-all duration-300 cursor-pointer border-0 shadow-md">
-                  <CardContent className="p-6 text-center">
-                    <div className="w-16 h-16 bg-gradient-to-r from-red-500 to-red-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                      <Settings className="w-8 h-8 text-white" />
-                    </div>
-                    <h3 className="font-semibold text-lg mb-2 group-hover:text-red-600 transition-colors">
-                      Painel Admin
-                    </h3>
-                    <p className="text-sm text-muted-foreground">Gerenciar pagamentos</p>
-                  </CardContent>
-                </Card>
-              </Link>
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* Onboarding Dialog */}
-      {walletConnected && !userProfile && (
-        <Dialog open={true}>
-          <DialogContent className="sm:max-w-md">
-            <DialogHeader>
-              <DialogTitle>Bem-vindo ao D-MTS</DialogTitle>
-              <DialogDescription>Selecione seu perfil para continuar</DialogDescription>
-            </DialogHeader>
-            <div className="grid gap-4 py-4">
-              {userProfiles.map((profile) => (
-                <Button
-                  key={profile.id}
-                  variant="outline"
-                  className="justify-start h-auto p-4"
-                  onClick={() => setUserProfile(profile.id)}
-                >
-                  <div className="text-left">
-                    <div className="font-medium">{profile.name}</div>
-                    <div className="text-sm text-muted-foreground">{profile.description}</div>
-                  </div>
-                </Button>
-              ))}
-            </div>
-          </DialogContent>
-        </Dialog>
-      )}
-
-      {/* Main Content */}
-      <main className="container mx-auto px-4 py-8">
-        {walletConnected ? (
-          <>
-            {/* Tabs */}
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-8">
-              <TabsList className="grid w-full md:w-auto grid-cols-3">
-                <TabsTrigger value="marketplace">Marketplace</TabsTrigger>
-                <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
-                <TabsTrigger value="contracts">Contratos</TabsTrigger>
-              </TabsList>
-
-              {/* Marketplace Tab */}
-              <TabsContent value="marketplace">
-                {/* Categories & Filters */}
-                <div className="flex flex-col lg:flex-row gap-6 mb-8">
-                  <div className="lg:w-1/4">
-                    <Card>
-                      <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                          <Filter className="w-5 h-5" />
-                          Categorias
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent className="space-y-2">
-                        {categories.map((category) => {
-                          const Icon = category.icon
-                          return (
-                            <Button
-                              key={category.id}
-                              variant={selectedCategory === category.id ? "default" : "ghost"}
-                              className="w-full justify-start"
-                              onClick={() => setSelectedCategory(category.id)}
-                            >
-                              <Icon className="w-4 h-4 mr-2" />
-                              {category.name}
-                            </Button>
-                          )
-                        })}
-                      </CardContent>
-                    </Card>
-
-                    <Card className="mt-4">
-                      <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                          <Activity className="w-5 h-5" />
-                          Status da Rede
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent className="space-y-4">
-                        <div className="space-y-2">
-                          <div className="flex justify-between">
-                            <span className="text-sm">Blockchain</span>
-                            <Badge variant="outline" className="text-green-600">
-                              Online
-                            </Badge>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-sm">Blocos</span>
-                            <span className="text-sm font-medium">12,453,789</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-sm">Nós Ativos</span>
-                            <span className="text-sm font-medium">24</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-sm">Contratos</span>
-                            <span className="text-sm font-medium">1,245</span>
-                          </div>
-                        </div>
-                        <div className="space-y-1">
-                          <div className="flex justify-between text-xs">
-                            <span>Uso da Rede</span>
-                            <span>65%</span>
-                          </div>
-                          <Progress value={65} className="h-2" />
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </div>
-
-                  <div className="lg:w-3/4">
-                    {/* Sort & Filter Bar */}
-                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-                      <div>
-                        <h3 className="text-2xl font-bold">
-                          {categories.find((c) => c.id === selectedCategory)?.name || "Todos os Itens"}
-                        </h3>
-                        <p className="text-muted-foreground">
-                          {filteredAssets.length + filteredServices.length} itens encontrados
-                        </p>
-                      </div>
-
-                      <div className="flex gap-2">
-                        <Select value={sortBy} onValueChange={setSortBy}>
-                          <SelectTrigger className="w-48">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="featured">Destaques</SelectItem>
-                            <SelectItem value="price-low">Preço: Menor para Maior</SelectItem>
-                            <SelectItem value="price-high">Preço: Maior para Menor</SelectItem>
-                            <SelectItem value="newest">Mais Recentes</SelectItem>
-                            <SelectItem value="availability">Disponibilidade</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-
-                    {/* Assets Section */}
-                    {filteredAssets.length > 0 && (
-                      <>
-                        <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
-                          <Layers className="w-5 h-5" />
-                          Ativos de Infraestrutura
-                        </h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-                          {filteredAssets.map((asset) => (
-                            <Card
-                              key={asset.id}
-                              className="group hover:shadow-xl transition-all duration-300 border-0 shadow-md overflow-hidden"
-                            >
-                              <CardHeader className="p-0">
-                                <div className="relative overflow-hidden">
-                                  <img
-                                    src={asset.image || "/placeholder.svg"}
-                                    alt={asset.name}
-                                    className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
-                                  />
-                                  {asset.tokenized && (
-                                    <Badge className="absolute top-3 left-3 bg-purple-600 hover:bg-purple-700">
-                                      <Database className="w-3 h-3 mr-1" />
-                                      Tokenizado
-                                    </Badge>
-                                  )}
-                                  {asset.verified && (
-                                    <Badge className="absolute top-3 right-3 bg-green-600 hover:bg-green-700">
-                                      <Shield className="w-3 h-3 mr-1" />
-                                      Verificado
-                                    </Badge>
-                                  )}
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="absolute bottom-3 right-3 bg-white/80 hover:bg-white"
-                                    onClick={() => toggleFavorite(asset.id)}
-                                  >
-                                    <Heart
-                                      className={`w-4 h-4 ${
-                                        favorites.includes(asset.id) ? "fill-red-500 text-red-500" : "text-gray-600"
-                                      }`}
-                                    />
-                                  </Button>
-                                </div>
-                              </CardHeader>
-
-                              <CardContent className="p-4">
-                                <div className="space-y-3">
-                                  <div>
-                                    <p className="text-sm text-muted-foreground">{asset.provider}</p>
-                                    <h4 className="font-semibold text-lg leading-tight">{asset.name}</h4>
-                                  </div>
-
-                                  <div className="flex items-center gap-2">
-                                    <Badge variant="outline" className="text-blue-600 border-blue-600">
-                                      {asset.type}
-                                    </Badge>
-                                    <Badge variant="outline">{asset.category}</Badge>
-                                  </div>
-
-                                  <div className="flex flex-wrap gap-1">
-                                    {asset.features.map((feature, index) => (
-                                      <Badge key={index} variant="secondary" className="text-xs">
-                                        {feature}
-                                      </Badge>
-                                    ))}
-                                  </div>
-
-                                  <div className="text-sm">
-                                    <div className="flex justify-between mb-1">
-                                      <span className="text-muted-foreground">Localização:</span>
-                                      <span className="font-medium">{asset.location}</span>
-                                    </div>
-                                    <div className="flex justify-between">
-                                      <span className="text-muted-foreground">Disponibilidade:</span>
-                                      <span className="font-medium">
-                                        {asset.availableSlices}/{asset.slices} fatias
-                                      </span>
-                                    </div>
-                                  </div>
-
-                                  <div className="flex items-center justify-between">
-                                    <div>
-                                      <div className="flex items-center gap-2">
-                                        <span className="text-2xl font-bold text-green-600">${asset.price}</span>
-                                        <span className="text-sm text-muted-foreground">/{asset.priceUnit}</span>
-                                      </div>
-                                      <p className="text-xs text-muted-foreground">
-                                        Valor Total: ${asset.totalValue.toLocaleString()}
-                                      </p>
-                                    </div>
-                                  </div>
-                                </div>
-                              </CardContent>
-
-                              <CardFooter className="p-4 pt-0">
-                                <Dialog>
-                                  <DialogTrigger asChild>
-                                    <Button className="w-full">
-                                      <Lock className="w-4 h-4 mr-2" />
-                                      Contratar Ativo
-                                    </Button>
-                                  </DialogTrigger>
-                                  <DialogContent>
-                                    <DialogHeader>
-                                      <DialogTitle>Contratar Ativo</DialogTitle>
-                                      <DialogDescription>
-                                        Este contrato será registrado na blockchain usando smart contracts
-                                      </DialogDescription>
-                                    </DialogHeader>
-                                    <div className="space-y-4 py-4">
-                                      <div className="space-y-2">
-                                        <h4 className="font-medium">{asset.name}</h4>
-                                        <p className="text-sm text-muted-foreground">
-                                          Provedor: {asset.provider} | Tipo: {asset.type}
-                                        </p>
-                                      </div>
-
-                                      <div className="grid grid-cols-2 gap-4">
-                                        <div>
-                                          <p className="text-sm font-medium">Preço por fatia</p>
-                                          <p className="text-lg font-bold text-green-600">
-                                            ${asset.price}/{asset.priceUnit}
-                                          </p>
-                                        </div>
-                                        <div>
-                                          <p className="text-sm font-medium">Fatias disponíveis</p>
-                                          <p className="text-lg font-bold">
-                                            {asset.availableSlices}/{asset.slices}
-                                          </p>
-                                        </div>
-                                      </div>
-
-                                      <div className="space-y-2">
-                                        <label className="text-sm font-medium">Selecione o número de fatias</label>
-                                        <Select defaultValue="1">
-                                          <SelectTrigger>
-                                            <SelectValue />
-                                          </SelectTrigger>
-                                          <SelectContent>
-                                            {[...Array(asset.availableSlices)].map((_, i) => (
-                                              <SelectItem key={i} value={(i + 1).toString()}>
-                                                {i + 1} fatia{i > 0 ? "s" : ""}
-                                              </SelectItem>
-                                            ))}
-                                          </SelectContent>
-                                        </Select>
-                                      </div>
-
-                                      <div className="space-y-2">
-                                        <label className="text-sm font-medium">Duração do contrato</label>
-                                        <Select defaultValue="12">
-                                          <SelectTrigger>
-                                            <SelectValue />
-                                          </SelectTrigger>
-                                          <SelectContent>
-                                            <SelectItem value="3">3 meses</SelectItem>
-                                            <SelectItem value="6">6 meses</SelectItem>
-                                            <SelectItem value="12">12 meses</SelectItem>
-                                            <SelectItem value="24">24 meses</SelectItem>
-                                          </SelectContent>
-                                        </Select>
-                                      </div>
-
-                                      <div className="bg-slate-50 p-3 rounded-md">
-                                        <div className="flex justify-between mb-1">
-                                          <span className="text-sm">Total estimado</span>
-                                          <span className="text-lg font-bold text-green-600">$3,000</span>
-                                        </div>
-                                        <div className="flex justify-between">
-                                          <span className="text-xs text-muted-foreground">Taxa de rede</span>
-                                          <span className="text-xs">5 TLC</span>
-                                        </div>
-                                      </div>
-
-                                      <Button className="w-full">
-                                        <Lock className="w-4 h-4 mr-2" />
-                                        Confirmar e Assinar Contrato
-                                      </Button>
-                                    </div>
-                                  </DialogContent>
-                                </Dialog>
-                              </CardFooter>
-                            </Card>
-                          ))}
-                        </div>
-                      </>
-                    )}
-
-                    {/* Services Section */}
-                    {filteredServices.length > 0 && (
-                      <>
-                        <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
-                          <Server className="w-5 h-5" />
-                          Serviços de Telecomunicações
-                        </h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                          {filteredServices.map((service) => (
-                            <Card
-                              key={service.id}
-                              className="group hover:shadow-xl transition-all duration-300 border-0 shadow-md overflow-hidden"
-                            >
-                              <CardHeader className="p-0">
-                                <div className="relative overflow-hidden">
-                                  <img
-                                    src={service.image || "/placeholder.svg"}
-                                    alt={service.name}
-                                    className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
-                                  />
-                                  {service.tokenized && (
-                                    <Badge className="absolute top-3 left-3 bg-purple-600 hover:bg-purple-700">
-                                      <Database className="w-3 h-3 mr-1" />
-                                      Tokenizado
-                                    </Badge>
-                                  )}
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="absolute top-3 right-3 bg-white/80 hover:bg-white"
-                                    onClick={() => toggleFavorite(service.id)}
-                                  >
-                                    <Heart
-                                      className={`w-4 h-4 ${
-                                        favorites.includes(service.id) ? "fill-red-500 text-red-500" : "text-gray-600"
-                                      }`}
-                                    />
-                                  </Button>
-                                </div>
-                              </CardHeader>
-
-                              <CardContent className="p-4">
-                                <div className="space-y-3">
-                                  <div>
-                                    <p className="text-sm text-muted-foreground">{service.provider}</p>
-                                    <h4 className="font-semibold text-lg leading-tight">{service.name}</h4>
-                                  </div>
-
-                                  <div className="flex items-center gap-2">
-                                    <Badge variant="outline" className="text-purple-600 border-purple-600">
-                                      {service.type}
-                                    </Badge>
-                                    <Badge variant="outline">{service.category}</Badge>
-                                  </div>
-
-                                  <div className="flex flex-wrap gap-1">
-                                    {service.features.map((feature, index) => (
-                                      <Badge key={index} variant="secondary" className="text-xs">
-                                        {feature}
-                                      </Badge>
-                                    ))}
-                                  </div>
-
-                                  <div className="text-sm">
-                                    <div className="flex justify-between mb-1">
-                                      <span className="text-muted-foreground">Localização:</span>
-                                      <span className="font-medium">{service.location}</span>
-                                    </div>
-                                    <div className="flex justify-between">
-                                      <span className="text-muted-foreground">Duração:</span>
-                                      <span className="font-medium">{service.duration}</span>
-                                    </div>
-                                  </div>
-
-                                  {service.requiredAssets && (
-                                    <div className="space-y-1">
-                                      <p className="text-xs text-muted-foreground">Ativos Necessários:</p>
-                                      <div className="flex flex-wrap gap-1">
-                                        {service.requiredAssets.map((asset, index) => (
-                                          <Badge key={index} variant="outline" className="text-xs">
-                                            <Layers className="w-3 h-3 mr-1" />
-                                            {asset}
-                                          </Badge>
-                                        ))}
-                                      </div>
-                                    </div>
-                                  )}
-
-                                  <div className="flex items-center justify-between">
-                                    <div>
-                                      <div className="flex items-center gap-2">
-                                        <span className="text-2xl font-bold text-green-600">${service.price}</span>
-                                        <span className="text-sm text-muted-foreground">/{service.priceUnit}</span>
-                                      </div>
-                                      <p className="text-xs text-muted-foreground">{service.contractType}</p>
-                                    </div>
-                                  </div>
-                                </div>
-                              </CardContent>
-
-                              <CardFooter className="p-4 pt-0">
-                                <Button className="w-full">
-                                  <Lock className="w-4 h-4 mr-2" />
-                                  Contratar Serviço
-                                </Button>
-                              </CardFooter>
-                            </Card>
-                          ))}
-                        </div>
-                      </>
-                    )}
-                  </div>
-                </div>
-              </TabsContent>
-
-              {/* Dashboard Tab */}
-              <TabsContent value="dashboard">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="text-lg">Meus Ativos</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-3xl font-bold">3</div>
-                      <p className="text-sm text-muted-foreground">Ativos contratados ativos</p>
-                      <div className="mt-4 space-y-2">
-                        <div className="flex justify-between text-sm">
-                          <span>Torre de Telecomunicações T-450</span>
-                          <Badge variant="outline" className="text-green-600">
-                            Ativo
-                          </Badge>
-                        </div>
-                        <div className="flex justify-between text-sm">
-                          <span>Espectro 700MHz</span>
-                          <Badge variant="outline" className="text-green-600">
-                            Ativo
-                          </Badge>
-                        </div>
-                        <div className="flex justify-between text-sm">
-                          <span>Fibra Óptica - Backbone</span>
-                          <Badge variant="outline" className="text-amber-600">
-                            Pendente
-                          </Badge>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="text-lg">Meus Serviços</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-3xl font-bold">2</div>
-                      <p className="text-sm text-muted-foreground">Serviços contratados ativos</p>
-                      <div className="mt-4 space-y-2">
-                        <div className="flex justify-between text-sm">
-                          <span>Rede Privada 5G</span>
-                          <Badge variant="outline" className="text-green-600">
-                            Ativo
-                          </Badge>
-                        </div>
-                        <div className="flex justify-between text-sm">
-                          <span>Backbone de Alta Capacidade</span>
-                          <Badge variant="outline" className="text-green-600">
-                            Ativo
-                          </Badge>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="text-lg">Meu Saldo</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-3xl font-bold">{tlcBalance} TLC</div>
-                      <p className="text-sm text-muted-foreground">Saldo disponível</p>
-                      <div className="mt-4 space-y-2">
-                        <div className="flex justify-between text-sm">
-                          <span>Bloqueado em contratos</span>
-                          <span className="font-medium">1,250 TLC</span>
-                        </div>
-                        <div className="flex justify-between text-sm">
-                          <span>Próximo pagamento</span>
-                          <span className="font-medium">350 TLC</span>
-                        </div>
-                      </div>
-                      <Button className="w-full mt-4">Adicionar Fundos</Button>
-                    </CardContent>
-                  </Card>
-                </div>
-
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Atividade Recente</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
-                            <Lock className="w-5 h-5 text-blue-600" />
-                          </div>
-                          <div>
-                            <p className="font-medium">Contrato Assinado</p>
-                            <p className="text-sm text-muted-foreground">Torre de Telecomunicações T-450</p>
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <p className="font-medium">-2,500 TLC</p>
-                          <p className="text-sm text-muted-foreground">Hoje, 14:32</p>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
-                            <Wallet className="w-5 h-5 text-green-600" />
-                          </div>
-                          <div>
-                            <p className="font-medium">Fundos Adicionados</p>
-                            <p className="text-sm text-muted-foreground">Depósito via Carteira</p>
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <p className="font-medium text-green-600">+5,000 TLC</p>
-                          <p className="text-sm text-muted-foreground">Ontem, 09:15</p>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center">
-                            <Key className="w-5 h-5 text-purple-600" />
-                          </div>
-                          <div>
-                            <p className="font-medium">Identidade Verificada</p>
-                            <p className="text-sm text-muted-foreground">DID Registrado</p>
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <p className="font-medium">-</p>
-                          <p className="text-sm text-muted-foreground">15/05/2024, 11:22</p>
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </TabsContent>
-
-              {/* Contracts Tab */}
-              <TabsContent value="contracts">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2">
-                        <Lock className="w-5 h-5" />
-                        Contratos Ativos
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <div className="bg-slate-50 p-4 rounded-md">
-                        <div className="flex justify-between mb-2">
-                          <h4 className="font-medium">Torre de Telecomunicações T-450</h4>
-                          <Badge>Ativo</Badge>
-                        </div>
-                        <div className="space-y-2 text-sm">
-                          <div className="flex justify-between">
-                            <span className="text-muted-foreground">ID do Contrato</span>
-                            <span className="font-mono">0x71C7...976F</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-muted-foreground">Provedor</span>
-                            <span>TelecomAssets Corp</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-muted-foreground">Valor Mensal</span>
-                            <span>$2,500</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-muted-foreground">Início</span>
-                            <span>01/05/2024</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-muted-foreground">Término</span>
-                            <span>01/05/2025</span>
-                          </div>
-                        </div>
-                        <Button variant="outline" size="sm" className="w-full mt-4">
-                          Ver Detalhes
-                        </Button>
-                      </div>
-
-                      <div className="bg-slate-50 p-4 rounded-md">
-                        <div className="flex justify-between mb-2">
-                          <h4 className="font-medium">Rede Privada 5G</h4>
-                          <Badge>Ativo</Badge>
-                        </div>
-                        <div className="space-y-2 text-sm">
-                          <div className="flex justify-between">
-                            <span className="text-muted-foreground">ID do Contrato</span>
-                            <span className="font-mono">0x82D9...124A</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-muted-foreground">Provedor</span>
-                            <span>Enterprise Networks</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-muted-foreground">Valor Mensal</span>
-                            <span>$8,500</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-muted-foreground">Início</span>
-                            <span>15/04/2024</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-muted-foreground">Término</span>
-                            <span>15/04/2025</span>
-                          </div>
-                        </div>
-                        <Button variant="outline" size="sm" className="w-full mt-4">
-                          Ver Detalhes
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2">
-                        <Database className="w-5 h-5" />
-                        Smart Contracts
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-4">
-                        <div className="bg-slate-50 p-4 rounded-md">
-                          <h4 className="font-medium mb-2">IndyDidRegistry</h4>
-                          <div className="space-y-2 text-sm">
-                            <div className="flex justify-between">
-                              <span className="text-muted-foreground">Endereço</span>
-                              <span className="font-mono">0x9F8D...42E1</span>
-                            </div>
-                            <div className="flex justify-between">
-                              <span className="text-muted-foreground">Função</span>
-                              <span>Registro de Identidade</span>
-                            </div>
-                            <div className="flex justify-between">
-                              <span className="text-muted-foreground">Status</span>
-                              <Badge variant="outline" className="text-green-600">
-                                Ativo
-                              </Badge>
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="bg-slate-50 p-4 rounded-md">
-                          <h4 className="font-medium mb-2">AssetRegistry</h4>
-                          <div className="space-y-2 text-sm">
-                            <div className="flex justify-between">
-                              <span className="text-muted-foreground">Endereço</span>
-                              <span className="font-mono">0x71C7...976F</span>
-                            </div>
-                            <div className="flex justify-between">
-                              <span className="text-muted-foreground">Função</span>
-                              <span>Registro de Ativos</span>
-                            </div>
-                            <div className="flex justify-between">
-                              <span className="text-muted-foreground">Status</span>
-                              <Badge variant="outline" className="text-green-600">
-                                Ativo
-                              </Badge>
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="bg-slate-50 p-4 rounded-md">
-                          <h4 className="font-medium mb-2">ServiceRegistry</h4>
-                          <div className="space-y-2 text-sm">
-                            <div className="flex justify-between">
-                              <span className="text-muted-foreground">Endereço</span>
-                              <span className="font-mono">0x82D9...124A</span>
-                            </div>
-                            <div className="flex justify-between">
-                              <span className="text-muted-foreground">Função</span>
-                              <span>Registro de Serviços</span>
-                            </div>
-                            <div className="flex justify-between">
-                              <span className="text-muted-foreground">Status</span>
-                              <Badge variant="outline" className="text-green-600">
-                                Ativo
-                              </Badge>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
-              </TabsContent>
-            </Tabs>
-          </>
-        ) : (
-          <div className="text-center py-12">
-            <h3 className="text-2xl font-bold mb-4">Conecte sua carteira digital</h3>
-            <p className="text-muted-foreground mb-8 max-w-md mx-auto">
-              Para acessar o marketplace descentralizado, você precisa conectar sua carteira digital e criar sua
-              identidade descentralizada (DID).
-            </p>
-            <Button size="lg" onClick={connectWallet}>
-              <Wallet className="w-5 h-5 mr-2" />
-              Conectar Carteira
-            </Button>
-          </div>
-        )}
-      </main>
-
       {/* Footer */}
-      <footer className="bg-gray-900 text-white py-12 mt-16">
+      <footer className="bg-white text-blue-900 py-12 mt-16 border-t border-blue-100">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div>
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
-                  <Database className="w-5 h-5 text-white" />
+                <div className="flex flex-row items-center gap-2">
+                  <img src="/IEEE-ICBC-Logo.png" alt="IEEE ICBC Logo" className="h-8 w-auto" />
+                  <img src="/cpqd-5g.webp" alt="D-MTS Logo" className="h-8 w-auto" />
                 </div>
-                <h3 className="text-xl font-bold">D-MTS</h3>
+                <h3 className="text-xl font-bold text-[#0057b7]">D-MTS</h3>
               </div>
-              <p className="text-gray-400 mb-4">
+              <p className="text-blue-900 mb-4">
                 Marketplace descentralizado para compartilhamento de infraestrutura de telecomunicações.
               </p>
               <div className="flex gap-4">
-                <Badge variant="outline" className="border-gray-600 text-gray-300">
+                <Badge variant="outline" className="border-blue-900 text-blue-900 bg-blue-50">
                   <Database className="w-3 h-3 mr-1" />
                   Hyperledger Besu
                 </Badge>
@@ -1377,10 +524,10 @@ export default function TelecomMarketplace() {
             </div>
           </div>
 
-          <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
+          <div className="border-t border-blue-100 mt-8 pt-8 text-center text-blue-900">
             <p>
-              &copy; 2024 D-MTS: Decentralized Marketplace for Telecommunication Services | Baseado no artigo de Jeffson
-              C. Sousa et al.
+              &copy; 2025 D-MTS: Decentralized Marketplace for Telecommunication Services | Demo Application for ICBC 2025 by Jeffson
+              C. Sousa.
             </p>
           </div>
         </div>

@@ -182,6 +182,11 @@ export default function PublishService() {
         serviceType: serviceType,
       })
 
+      // Se o backend retornar monthsAvailable, atualize o form
+      if (result && typeof result === 'object' && 'monthsAvailable' in result && result.monthsAvailable) {
+        setForm((prev) => ({ ...prev, monthsAvailable: String(result.monthsAvailable) }))
+      }
+
       setPublishProgress(75)
       await new Promise((resolve) => setTimeout(resolve, 1000))
 

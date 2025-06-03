@@ -28,6 +28,7 @@ import { apiService } from "@/lib/api"
 import { blockchainService } from "@/lib/blockchain"
 import { ethers } from "ethers"
 import { da } from "date-fns/locale"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 
 interface Asset {
   id: string
@@ -44,6 +45,7 @@ interface Asset {
   contractType?: string
   description: string
   specifications?: { [key: string]: string }
+  monthsAvailable?: string
 }
 
 export default function HireAssetPage() {
@@ -58,6 +60,8 @@ export default function HireAssetPage() {
   const [isHiring, setIsHiring] = useState(false)
   const [hiringProgress, setHiringProgress] = useState(0)
   const [status, setStatus] = useState<string>("")
+  const [contractDurations, setContractDurations] = useState<number[]>([])
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false)
 
   useEffect(() => {
     async function connectWallet() {
@@ -82,6 +86,11 @@ export default function HireAssetPage() {
             features: found.features || [],        // evita erro de map em undefined
             specifications: found.specifications || {}, // evita erro em Object.entries
           });
+          // Se o asset tem monthsAvailable, use para gerar as opções
+          if (found.monthsAvailable && Number(found.monthsAvailable) > 0) {
+            setContractDurations(Array.from({ length: Number(found.monthsAvailable) }, (_, i) => i + 1));
+            return;
+          }
         } else {
           console.warn("Ativo não encontrado com id:", id);
         }
@@ -92,21 +101,60 @@ export default function HireAssetPage() {
       }
     }
 
+    async function fetchContractDurations() {
+      try {
+        const res = await fetch('http://localhost:3001/api/contract-durations');
+        const text = await res.text();
+        let data;
+        try {
+          data = JSON.parse(text);
+        } catch {
+          data = null;
+        }
+        if (typeof data === 'number' && data > 0) {
+          setContractDurations(Array.from({ length: data }, (_, i) => i + 1));
+        } else if (Array.isArray(data)) {
+          setContractDurations(data);
+        } else {
+          setContractDurations([]);
+        }
+      } catch (err) {
+        console.error("Error fetching contract durations:", err);
+      }
+    }
+
     connectWallet();
     fetchAssetDetails();
+    // Só buscar do endpoint se não vier do asset
+    setTimeout(() => {
+      setContractDurations((prev) => {
+        if (prev.length === 0) {
+          fetchContractDurations();
+        }
+        return prev;
+      });
+    }, 500);
   }, [id]);
 
   const calculateTotal = () => {
     if (!asset) return 0
-    const slices = Number.parseInt(selectedSlices)
-    const months = Number.parseInt(contractDuration)
-    return asset.pricePerSlice * slices * months
+    // O valor total do contrato é o totalValue do asset
+    return Number(asset.totalValue)
+  }
+
+  const calculateFee = () => {
+    if (!asset) return 0
+    // Taxa de 10% do valor total do contrato
+    return (calculateTotal() * 0.1).toFixed(2)
   }
 
   const calculateMonthly = () => {
     if (!asset) return 0
-    const slices = Number.parseInt(selectedSlices)
-    return asset.price * slices
+    const months = Number.parseInt(contractDuration)
+    if (months <= 0) return 0
+    // Valor mensal = (total - taxa) dividido pelo número de meses
+    const totalSemTaxa = calculateTotal() - Number(calculateFee())
+    return (totalSemTaxa / months).toFixed(2)
   }
 
   const handleHire = async () => {
@@ -127,7 +175,7 @@ export default function HireAssetPage() {
       // Verificar saldo TLC
       setHiringProgress(50)
       const balance = await blockchainService.getTLCBalance(renterAddress)
-      const totalCost = (calculateTotal() + 5).toString()
+      const totalCost = (calculateTotal()).toString()
 
       if (Number.parseFloat(balance) < Number.parseFloat(totalCost)) {
         throw new Error("Saldo TLC insuficiente")
@@ -144,9 +192,16 @@ export default function HireAssetPage() {
       await new Promise((resolve) => setTimeout(resolve, 500))
 
       setStatus(`✅ Ativo contratado com sucesso! TX: ${result.txHash?.slice(0, 10)}...`)
-    } catch (err: any) {
-      console.error(err)
-      setStatus(`❌ Erro ao contratar ativo: ${err.message}`)
+    } catch (err: unknown) {
+      let msg = '';
+      if (err instanceof Error) {
+        msg = err.message;
+        console.error(err);
+      } else {
+        msg = String(err);
+        console.error(msg);
+      }
+      setStatus(`❌ Erro ao contratar ativo: ${msg}`)
     } finally {
       setIsHiring(false)
       setHiringProgress(0)
@@ -238,7 +293,7 @@ export default function HireAssetPage() {
                     </div>
                     <div className="flex items-center gap-2">
                       <DollarSign className="w-4 h-4 text-green-600" />
-                      <span className="text-sm font-medium">{asset.price} TLC/mês</span>
+                      <span className="text-sm font-medium">{asset.price} TLC</span>
                     </div>
                   </div>
 
@@ -296,7 +351,7 @@ export default function HireAssetPage() {
                         <SelectContent>
                           {[...Array(asset.slices)].map((_, i) => (
                             <SelectItem key={i} value={(i + 1).toString()}>
-                              {i + 1} fatia{i > 0 ? "s" : ""} - {asset.price * (i + 1)} TLC/mês
+                              {i + 1} fatia{i > 0 ? "s" : ""}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -310,44 +365,15 @@ export default function HireAssetPage() {
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="3">3 meses</SelectItem>
-                          <SelectItem value="6">6 meses</SelectItem>
-                          <SelectItem value="12">12 meses</SelectItem>
-                          <SelectItem value="24">24 meses</SelectItem>
-                          <SelectItem value="36">36 meses</SelectItem>
+                          {Array.isArray(contractDurations) && contractDurations.length > 0 ? (
+                            contractDurations.map((months) => (
+                              <SelectItem key={months} value={String(months)}>{months} meses</SelectItem>
+                            ))
+                          ) : (
+                            <SelectItem value="12">12 meses</SelectItem>
+                          )}
                         </SelectContent>
                       </Select>
-                    </div>
-
-                    <div className="bg-slate-50 p-4 rounded-lg space-y-3">
-                      <h4 className="font-semibold">Resumo Financeiro</h4>
-                      <div className="space-y-2">
-                        <div className="flex justify-between">
-                          <span className="text-sm text-muted-foreground">Fatias selecionadas:</span>
-                          <span className="font-medium">{selectedSlices}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-sm text-muted-foreground">Preço por fatia:</span>
-                          <span className="font-medium">{asset.price} TLC/mês</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-sm text-muted-foreground">Valor mensal:</span>
-                          <span className="font-medium">{calculateMonthly()} TLC</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-sm text-muted-foreground">Duração:</span>
-                          <span className="font-medium">{contractDuration} meses</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-sm text-muted-foreground">Taxa de rede:</span>
-                          <span className="font-medium text-green-600">5 TLC</span>
-                        </div>
-                        <hr />
-                        <div className="flex justify-between font-bold">
-                          <span>Total do contrato:</span>
-                          <span className="text-green-600">{calculateTotal() + 5} TLC</span>
-                        </div>
-                      </div>
                     </div>
 
                     <Alert>
@@ -373,7 +399,7 @@ export default function HireAssetPage() {
                       </div>
                     )}
 
-                    <Button onClick={handleHire} disabled={isHiring} className="w-full h-12 text-lg">
+                    <Button onClick={() => setShowConfirmDialog(true)} disabled={isHiring} className="w-full h-12 text-lg">
                       {isHiring ? (
                         <>
                           <Loader2 className="w-5 h-5 mr-2 animate-spin" />
@@ -432,6 +458,53 @@ export default function HireAssetPage() {
           </div>
         </div>
       </div>
+
+      {/* Dialog de confirmação do resumo financeiro */}
+      <Dialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Resumo Financeiro</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2">
+            <div className="flex justify-between">
+              <span className="text-sm text-muted-foreground">Fatias selecionadas:</span>
+              <span className="font-medium">{selectedSlices}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-sm text-muted-foreground">Valor mensal:</span>
+              <span className="font-medium">{calculateMonthly()} TLC</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-sm text-muted-foreground">Duração:</span>
+              <span className="font-medium">{contractDuration} meses</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-sm text-muted-foreground">Taxa de rede (10%):</span>
+              <span className="font-medium text-green-600">{calculateFee()} TLC</span>
+            </div>
+            <hr />
+            <div className="flex justify-between font-bold">
+              <span>Total do contrato:</span>
+              <span className="text-green-600">{calculateTotal()} TLC</span>
+            </div>
+          </div>
+          <DialogFooter className="flex flex-row gap-4 justify-end">
+            <Button variant="outline" onClick={() => setShowConfirmDialog(false)}>
+              Cancelar
+            </Button>
+            <Button
+              onClick={async () => {
+                setShowConfirmDialog(false);
+                await handleHire();
+              }}
+              disabled={isHiring}
+              className="bg-green-600 text-white hover:bg-green-700"
+            >
+              Sim, confirmar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

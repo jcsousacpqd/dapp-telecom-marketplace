@@ -370,32 +370,6 @@ export default function PublishAsset() {
                     </div>
                   )}
 
-                  <Button
-                    onClick={handleSubmit}
-                    disabled={isPublishing || !validateForm()}
-                    className="w-full h-12 text-lg"
-                  >
-                    {isPublishing ? (
-                      <>
-                        <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                        Publicando...
-                      </>
-                    ) : (
-                      <>
-                        <Building className="w-5 h-5 mr-2" />
-                        Publicar Ativo
-                      </>
-                    )}
-                  </Button>
-
-                  {status && (
-                    <Alert
-                      className={status.includes("✅") ? "border-green-200 bg-green-50" : "border-red-200 bg-red-50"}
-                    >
-                      <AlertDescription>{status}</AlertDescription>
-                    </Alert>
-                  )}
-
                   {/* Novos campos para o backend */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
@@ -449,6 +423,46 @@ export default function PublishAsset() {
                     <Label htmlFor="contractType">Tipo de Contrato</Label>
                     <Input id="contractType" placeholder="ex: SLA Premium" value={form.contractType} onChange={e => handleChange("contractType", e.target.value)} disabled={isPublishing} />
                   </div>
+                  {/* Status e progresso de publicação + botão */}
+                  {status && (
+                    <Alert
+                      className={status.includes("✅") ? "border-green-200 bg-green-50" : "border-red-200 bg-red-50"}
+                    >
+                      <AlertDescription>{status}</AlertDescription>
+                    </Alert>
+                  )}
+                  {isPublishing && (
+                    <div className="space-y-2 mb-4">
+                      <div className="flex justify-between text-sm">
+                        <span>Publicando ativo...</span>
+                        <span>{publishProgress}%</span>
+                      </div>
+                      <Progress value={publishProgress} className="h-2" />
+                      <div className="text-xs text-muted-foreground">
+                        {publishProgress < 25 && "Verificando permissões DID..."}
+                        {publishProgress >= 25 && publishProgress < 50 && "Criando contrato inteligente..."}
+                        {publishProgress >= 50 && publishProgress < 75 && "Registrando no backend..."}
+                        {publishProgress >= 75 && "Confirmando na blockchain..."}
+                      </div>
+                    </div>
+                  )}
+                  <Button
+                    onClick={handleSubmit}
+                    disabled={isPublishing || !validateForm()}
+                    className="w-full h-14 text-lg mt-8"
+                  >
+                    {isPublishing ? (
+                      <>
+                        <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                        Publicando...
+                      </>
+                    ) : (
+                      <>
+                        <Building className="w-5 h-5 mr-2" />
+                        Publicar Ativo
+                      </>
+                    )}
+                  </Button>
                 </CardContent>
               </Card>
             </div>

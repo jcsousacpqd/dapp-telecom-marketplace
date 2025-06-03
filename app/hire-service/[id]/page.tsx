@@ -29,6 +29,7 @@ import { useParams } from "next/navigation"
 import { apiService } from "@/lib/api"
 import { blockchainService } from "@/lib/blockchain"
 import { ethers } from "ethers"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 
 interface Service {
   id: string
@@ -54,9 +55,11 @@ export default function HireServicePage() {
   const [signer, setSigner] = useState<any>(null);
   const [service, setService] = useState<Service | null>(null)
   const [contractDuration, setContractDuration] = useState("12")
+  const [contractDurations, setContractDurations] = useState<number[]>([])
   const [customRequirements, setCustomRequirements] = useState("")
   const [loading, setLoading] = useState(true);
   const [isHiring, setIsHiring] = useState(false)
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false)
   const [hiringProgress, setHiringProgress] = useState(0)
   const [status, setStatus] = useState<string | null>(null)
 
@@ -83,11 +86,27 @@ export default function HireServicePage() {
             features: found.features || [],        // evita erro de map em undefined
             specifications: found.specifications || {}, // evita erro em Object.entries
           });
+          // Se o serviço tem duration no formato '12 months', use para gerar as opções
+          if (found.duration && typeof found.duration === 'string') {
+            const match = found.duration.match(/(\d+)/);
+            const maxMonths = match ? Number(match[1]) : 12;
+            if (maxMonths > 0) {
+              setContractDurations(Array.from({ length: maxMonths }, (_, i) => i + 1));
+            }
+          }
         } else {
           console.warn("Serviço não encontrado com id:", id);
         }
-      } catch (err) {
-        console.error("Error fetching asset:", err);
+      } catch (err: unknown) {
+        let msg = '';
+        if (err instanceof Error) {
+          msg = err.message;
+          console.error(err);
+        } else {
+          msg = String(err);
+          console.error(msg);
+        }
+        setStatus(`❌ Erro ao contratar serviço: ${msg}`)
       } finally {
         setLoading(false);
       }
@@ -100,12 +119,23 @@ export default function HireServicePage() {
   const calculateTotal = () => {
     if (!service) return 0
     const months = Number.parseInt(contractDuration)
-    return service.finalPrice * months
+    // O valor total nunca pode ser maior que o finalPrice do serviço
+    return service.finalPrice
   }
 
-  const calculateSavings = () => {
+  const calculateFee = () => {
     if (!service) return 0
-    return service.finalPrice - service.price
+    // Taxa de 10% do valor total
+    return (service.finalPrice * 0.1).toFixed(2)
+  }
+
+  const calculateMonthly = () => {
+    if (!service) return 0
+    const months = Number.parseInt(contractDuration)
+    if (months <= 0) return 0
+    // Valor mensal = (total - taxa) dividido pelo número de meses
+    const totalSemTaxa = service.finalPrice - Number(calculateFee())
+    return (totalSemTaxa / months).toFixed(2)
   }
 
   const handleHire = async () => {
@@ -126,7 +156,7 @@ export default function HireServicePage() {
       // Verificar saldo TLC
       setHiringProgress(40)
       const balance = await blockchainService.getTLCBalance(renterAddress)
-      const totalCost = (calculateTotal() + 10).toString()
+      const totalCost = (calculateTotal()).toString()
 
       if (Number.parseFloat(balance) < Number.parseFloat(totalCost)) {
         throw new Error("Saldo TLC insuficiente")
@@ -239,7 +269,7 @@ export default function HireServicePage() {
                     </div>
                     <div className="flex items-center gap-2">
                       <DollarSign className="w-4 h-4 text-green-600" />
-                      <span className="text-sm font-medium">{service.finalPrice} TLC/mês</span>
+                      <span className="text-sm font-medium">{service.finalPrice} TLC</span>
                     </div>
                   </div>
 
@@ -312,11 +342,13 @@ export default function HireServicePage() {
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="1">1 meses</SelectItem>
-                          <SelectItem value="2">2 meses</SelectItem>
-                          <SelectItem value="3">3 meses</SelectItem>
-                          <SelectItem value="4">4 meses</SelectItem>
-                          <SelectItem value="5">5 meses</SelectItem>
+                          {Array.isArray(contractDurations) && contractDurations.length > 0 ? (
+                            contractDurations.map((months) => (
+                              <SelectItem key={months} value={String(months)}>{months} meses</SelectItem>
+                            ))
+                          ) : (
+                            <SelectItem value="12">12 meses</SelectItem>
+                          )}
                         </SelectContent>
                       </Select>
                     </div>
@@ -332,34 +364,7 @@ export default function HireServicePage() {
                     </div>
 
                     <div className="bg-slate-50 p-4 rounded-lg space-y-3">
-                      <h4 className="font-semibold">Resumo Financeiro</h4>
-                      <div className="space-y-2">
-                        <div className="flex justify-between">
-                          <span className="text-sm text-muted-foreground">Preço base:</span>
-                          <span className="font-medium">{service.price} TLC/mês</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-sm text-muted-foreground">Valor adicional:</span>
-                          <span className="font-medium">{calculateSavings()} TLC/mês</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-sm text-muted-foreground">Valor mensal:</span>
-                          <span className="font-medium">{service.finalPrice} TLC</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-sm text-muted-foreground">Duração:</span>
-                          <span className="font-medium">{contractDuration} meses</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-sm text-muted-foreground">Taxa de rede:</span>
-                          <span className="font-medium text-green-600">10 TLC</span>
-                        </div>
-                        <hr />
-                        <div className="flex justify-between font-bold">
-                          <span>Total do contrato:</span>
-                          <span className="text-green-600">{calculateTotal() + 10} TLC</span>
-                        </div>
-                      </div>
+                      {/* Resumo Financeiro removido da visualização principal */}
                     </div>
 
                     <Alert>
@@ -386,7 +391,7 @@ export default function HireServicePage() {
                       </div>
                     )}
 
-                    <Button onClick={handleHire} disabled={isHiring} className="w-full h-12 text-lg">
+                    <Button onClick={() => setShowConfirmDialog(true)} disabled={isHiring} className="w-full h-12 text-lg">
                       {isHiring ? (
                         <>
                           <Loader2 className="w-5 h-5 mr-2 animate-spin" />
@@ -451,6 +456,49 @@ export default function HireServicePage() {
           </div>
         </div>
       </div>
+
+      {/* Dialog de confirmação do resumo financeiro */}
+      <Dialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Resumo Financeiro</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2">
+            <div className="flex justify-between">
+              <span className="text-sm text-muted-foreground">Valor mensal:</span>
+              <span className="font-medium">{calculateMonthly()} TLC</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-sm text-muted-foreground">Duração:</span>
+              <span className="font-medium">{contractDuration} meses</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-sm text-muted-foreground">Taxa de rede (10%):</span>
+              <span className="font-medium text-green-600">{calculateFee()} TLC</span>
+            </div>
+            <hr />
+            <div className="flex justify-between font-bold">
+              <span>Total do contrato:</span>
+              <span className="text-green-600">{calculateTotal()} TLC</span>
+            </div>
+          </div>
+          <DialogFooter className="flex flex-row gap-4 justify-end">
+            <Button variant="outline" onClick={() => setShowConfirmDialog(false)}>
+              Cancelar
+            </Button>
+            <Button
+              onClick={async () => {
+                setShowConfirmDialog(false);
+                await handleHire();
+              }}
+              disabled={isHiring}
+              className="bg-green-600 text-white hover:bg-green-700"
+            >
+              Sim, confirmar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

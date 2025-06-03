@@ -1,122 +1,5 @@
 [
   {
-    "id": "service_test_01",
-    "description": "Servico",
-    "monthsAvailable": 1,
-    "price": "10",
-    "finalPrice": "10",
-    "assetIds": "",
-    "slices": ""
-  },
-  {
-    "id": "service_asset_881",
-    "description": "Service_Asset_881",
-    "monthsAvailable": 2,
-    "price": "10",
-    "finalPrice": "10",
-    "assetIds": "asset_881",
-    "slices": "2"
-  },
-  {
-    "id": "service001",
-    "description": "Serviço com Infra Propria",
-    "monthsAvailable": 2,
-    "price": "10",
-    "finalPrice": "10",
-    "assetIds": "",
-    "slices": ""
-  },
-  {
-    "id": "service_asset_0001",
-    "description": "Serviço com Infra do Marketplace",
-    "monthsAvailable": 2,
-    "price": "10",
-    "finalPrice": "10",
-    "assetIds": "asset01",
-    "slices": "10"
-  },
-  {
-    "id": "service_asset_new_01",
-    "description": "service_asset_new_01",
-    "monthsAvailable": 2,
-    "price": "10",
-    "finalPrice": "10",
-    "assetIds": "test_asset_new02",
-    "slices": "2"
-  },
-  {
-    "id": "service_asset_new_03",
-    "description": "service_asset_new_03",
-    "monthsAvailable": 2,
-    "price": "20",
-    "finalPrice": "20",
-    "assetIds": "asset_new_03",
-    "slices": "2"
-  },
-  {
-    "id": "icbb_test_service",
-    "description": "Teste de Serviço",
-    "monthsAvailable": 2,
-    "price": "10",
-    "finalPrice": "10",
-    "assetIds": "",
-    "slices": ""
-  },
-  {
-    "id": "service1test",
-    "description": "Teste",
-    "monthsAvailable": 1,
-    "price": "10",
-    "finalPrice": "10",
-    "assetIds": "",
-    "slices": ""
-  },
-  {
-    "id": "service1",
-    "description": "tes",
-    "monthsAvailable": 1,
-    "price": "10",
-    "finalPrice": "10",
-    "assetIds": "",
-    "slices": ""
-  },
-  {
-    "id": "service1ts",
-    "description": "Ts",
-    "monthsAvailable": 1,
-    "price": "10",
-    "finalPrice": "10",
-    "assetIds": "",
-    "slices": ""
-  },
-  {
-    "id": "test_merge_service",
-    "description": "Teste Full",
-    "monthsAvailable": 2,
-    "price": "10",
-    "finalPrice": "10",
-    "assetIds": "tower-sp-001",
-    "slices": "2"
-  },
-  {
-    "id": "service_test_sem_ativo",
-    "description": "Descrição Generica",
-    "monthsAvailable": 4,
-    "price": "10",
-    "finalPrice": "10",
-    "assetIds": "",
-    "slices": ""
-  },
-  {
-    "id": "service_com_ativo1",
-    "description": "Descrição Generica de Ativo 1",
-    "monthsAvailable": 3,
-    "price": "10",
-    "finalPrice": "10",
-    "assetIds": "test_asset_tower_1",
-    "slices": "2"
-  },
-  {
     "id": "5G-NET-001",
     "name": "Rede Privada 5G",
     "type": "service",
@@ -149,7 +32,7 @@
     "provider": "enendom",
     "price": "10",
     "priceUnit": "month",
-    "duration": "12 months",
+    "duration": "10 months",
     "location": "pisa",
     "image": "https://imgs.search.brave.com/BEsE4cvi-Y4lYJgfjNVd_BEwC6kYcsHe_M5jh6ks7-I/rs:fit:500:0:0:0/g:ce/aHR0cHM6Ly9oaWRz/Lm9yZy5ici93cC1j/b250ZW50L3VwbG9h/ZHMvMjAyMy8xMS9D/UFFEX0xvZ29fUG9z/aXRpdm9fUkdCLTEw/MzB4MzY4LTEtMzAw/eDEwNy53ZWJw",
     "features": [

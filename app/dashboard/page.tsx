@@ -20,8 +20,9 @@ import {
 } from "lucide-react"
 import Link from "next/link"
 import { blockchainService } from "@/lib/blockchain"
-import { assert } from "console"
 import { ethers } from "ethers"
+import { Button } from "@/components/ui/button"
+import { useRouter } from "next/navigation"
 
 const menuItems = [
   {
@@ -98,7 +99,7 @@ const statsDefault = [
     color: "text-green-600",
   },
   {
-    title: "Contratos Ativos",
+    title: "Contratos Criados",
     value: "-",
     change: "",
     icon: Database,
@@ -144,16 +145,22 @@ export default function Dashboard() {
   const [walletConnected, setWalletConnected] = useState(false)
   const [userAddress, setUserAddress] = useState("")
   const [stats, setStats] = useState(statsDefault)
+  const router = useRouter();
 
   useEffect(() => {
-    // Simular verificação de carteira conectada
-    const checkWallet = () => {
+    async function checkWallet() {
       if (typeof window !== "undefined" && window.ethereum) {
-        setWalletConnected(true)
-        setUserAddress("0x71C7656EC7ab88b098defB751B7401B5f6d8976F")
+        try {
+          const address = await blockchainService.connectWallet();
+          setWalletConnected(true);
+          setUserAddress(address);
+        } catch {
+          setWalletConnected(false);
+          setUserAddress("");
+        }
       }
     }
-    checkWallet()
+    checkWallet();
   }, [])
 
   useEffect(() => {
@@ -197,27 +204,25 @@ export default function Dashboard() {
       }
     }
     loadStats()
-  }, [])
+  }, [walletConnected, userAddress])
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
       {/* Header */}
-      <header className="bg-white/80 backdrop-blur-md border-b">
+      <header className="bg-white border-b border-blue-100 sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl flex items-center justify-center">
-                <Database className="w-6 h-6 text-white" />
+              <div className="flex flex-row items-center gap-2">
+                <img src="/IEEE-ICBC-Logo.png" alt="IEEE ICBC Logo" className="h-10 w-auto" />
+                <img src="/logo-cpqd.webp" alt="D-MTS Logo" className="h-10 w-auto" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                  D-MTS Dashboard
-                </h1>
-                <p className="text-sm text-muted-foreground">Marketplace Descentralizado</p>
+                <h1 className="text-2xl font-bold text-[#0057b7]">D-MTS</h1>
+                <p className="text-sm text-blue-900">Decentralized Telecom Marketplace</p>
               </div>
             </div>
-
-            {walletConnected && (
+            {walletConnected && userAddress ? (
               <div className="flex items-center gap-4">
                 <Badge variant="outline" className="text-green-600 border-green-600">
                   <Activity className="w-3 h-3 mr-1" />
@@ -227,6 +232,20 @@ export default function Dashboard() {
                   {userAddress.substring(0, 6)}...{userAddress.substring(userAddress.length - 4)}
                 </Badge>
               </div>
+            ) : (
+              <Button onClick={async () => {
+                try {
+                  const address = await blockchainService.connectWallet();
+                  setWalletConnected(true);
+                  setUserAddress(address);
+                } catch {
+                  setWalletConnected(false);
+                  setUserAddress("");
+                }
+              }} className="bg-blue-600 hover:bg-blue-700 text-white">
+                <Wallet className="w-4 h-4 mr-2" />
+                Conectar Carteira
+              </Button>
             )}
           </div>
         </div>
@@ -244,7 +263,6 @@ export default function Dashboard() {
           <TabsList className="grid w-full md:w-auto grid-cols-3">
             <TabsTrigger value="overview">Visão Geral</TabsTrigger>
             <TabsTrigger value="actions">Ações Rápidas</TabsTrigger>
-            <TabsTrigger value="activity">Atividade</TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview" className="space-y-6">
@@ -305,13 +323,6 @@ export default function Dashboard() {
                         <p className="text-sm text-muted-foreground">Automatize pagamentos e acordos com blockchain</p>
                       </div>
                     </div>
-                    <div className="flex items-start gap-3">
-                      <div className="w-2 h-2 bg-orange-500 rounded-full mt-2"></div>
-                      <div>
-                        <p className="font-medium">Governança Descentralizada</p>
-                        <p className="text-sm text-muted-foreground">Participe das decisões usando tokens TLC</p>
-                      </div>
-                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -320,19 +331,35 @@ export default function Dashboard() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Database className="w-5 h-5" />
-                    Status da Blockchain
+                    Blockchain
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="flex flex-col items-center justify-center py-6">
-                    <a
-                      href="https://chainless.io/" // Altere para o link do seu block explorer se necessário
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-block px-6 py-2 bg-blue-600 text-white rounded-lg font-semibold shadow hover:bg-blue-700 transition"
-                    >
-                      Acessar Block Explorer
-                    </a>
+                  <div className="space-y-3">
+                    <div className="flex justify-between">
+                      <span className="text-sm">Rede</span>
+                      <Badge variant="outline" className="text-green-600">
+                        Hyperledger Besu
+                      </Badge>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm">Status</span>
+                      <Badge variant="outline" className="text-green-600">
+                        Online
+                      </Badge>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm">Explorador de Blocos</span>
+                      <a
+                        href="http://localhost:26000/dashboard"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-blue-600 to-blue-700 text-white font-semibold shadow hover:from-blue-700 hover:to-blue-800 transition-all duration-200 text-base"
+                      >
+                        <Database className="w-5 h-5" />
+                        Acessar Explorador
+                      </a>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -368,64 +395,67 @@ export default function Dashboard() {
               })}
             </div>
           </TabsContent>
-
-          <TabsContent value="activity" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Clock className="w-5 h-5" />
-                  Atividade Recente
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {recentActivity.map((activity, index) => (
-                    <div key={index} className="flex items-center justify-between p-4 bg-slate-50 rounded-lg">
-                      <div className="flex items-center gap-3">
-                        <div
-                          className={`w-10 h-10 rounded-full flex items-center justify-center ${activity.type === "asset"
-                            ? "bg-blue-100"
-                            : activity.type === "service"
-                              ? "bg-green-100"
-                              : "bg-purple-100"
-                            }`}
-                        >
-                          {activity.type === "asset" ? (
-                            <Building className="w-5 h-5 text-blue-600" />
-                          ) : activity.type === "service" ? (
-                            <Server className="w-5 h-5 text-green-600" />
-                          ) : (
-                            <User className="w-5 h-5 text-purple-600" />
-                          )}
-                        </div>
-                        <div>
-                          <p className="font-medium">{activity.title}</p>
-                          <p className="text-sm text-muted-foreground">
-                            {activity.user} • {activity.time}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-medium">{activity.amount}</p>
-                        <Badge
-                          variant={activity.status === "success" ? "default" : "secondary"}
-                          className={
-                            activity.status === "success"
-                              ? "bg-green-100 text-green-700"
-                              : "bg-yellow-100 text-yellow-700"
-                          }
-                        >
-                          {activity.status === "success" ? "Concluído" : "Pendente"}
-                        </Badge>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
         </Tabs>
       </div>
+
+      {/* Footer */}
+      <footer className="bg-white text-blue-900 py-12 mt-16 border-t border-blue-100">
+        <div className="container mx-auto px-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+            <div>
+              <div className="flex items-center gap-3 mb-4">
+                <div className="flex flex-row items-center gap-2">
+                  <img src="/IEEE-ICBC-Logo.png" alt="IEEE ICBC Logo" className="h-8 w-auto" />
+                  <img src="/cpqd-5g.webp" alt="D-MTS Logo" className="h-8 w-auto" />
+                </div>
+                <h3 className="text-xl font-bold text-[#0057b7]">D-MTS</h3>
+              </div>
+              <p className="text-blue-900 mb-4">
+                Marketplace descentralizado para compartilhamento de infraestrutura de telecomunicações.
+              </p>
+              <div className="flex gap-4">
+                <Badge variant="outline" className="border-blue-900 text-blue-900 bg-blue-50">
+                  <Database className="w-3 h-3 mr-1" />
+                  Hyperledger Besu
+                </Badge>
+              </div>
+            </div>
+            <div>
+              <h4 className="font-semibold mb-4">Ativos</h4>
+              <ul className="space-y-2 text-blue-900">
+                <li>Torres</li>
+                <li>Antenas</li>
+                <li>Espectro</li>
+                <li>Fibra Óptica</li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="font-semibold mb-4">Serviços</h4>
+              <ul className="space-y-2 text-blue-900">
+                <li>Redes Privadas</li>
+                <li>Conectividade Rural</li>
+                <li>Backbone</li>
+                <li>Data Centers</li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="font-semibold mb-4">Recursos</h4>
+              <ul className="space-y-2 text-blue-900">
+                <li>Documentação</li>
+                <li>API</li>
+                <li>Smart Contracts</li>
+                <li>Governança</li>
+              </ul>
+            </div>
+          </div>
+          <div className="border-t border-blue-100 mt-8 pt-8 text-center text-blue-900">
+            <p>
+              &copy; 2025 D-MTS: Decentralized Marketplace for Telecommunication Services | Demo Application for ICBC 2025 by Jeffson
+              C. Sousa.
+            </p>
+          </div>
+        </div>
+      </footer>
     </div>
   )
 }
